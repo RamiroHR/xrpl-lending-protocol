@@ -174,7 +174,7 @@ async function main(): Promise<void> {
     const brokerSigned = broker.sign(lsPrepared);
 
     // Step 3: counterparty signs with the CPT\0 prefix (fixCleanup3_4_0 / rippled ≥ 3.4.0).
-    // signLoanSetByCounterparty from xrpl@5.2.0-beta.0 still uses encodeForSigning (STX\0),
+    // signLoanSetByCounterparty from xrpl@5.2.0-beta.0 used encodeForSigning (STX\0) — broken; beta.1 may fix it.
     // which produces a signature rippled rejects as "Counterparty: Invalid signature".
     console.log('  Step 3: borrower counter-signs (encodeForSigningCounterparty / CPT\\0 prefix)...');
     if (!borrower.privateKey) throw new Error('Borrower wallet missing private key');

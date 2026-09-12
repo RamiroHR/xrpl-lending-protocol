@@ -1,7 +1,8 @@
 # XRPL Developer Experience Log
 
 Captured during hackathon development — Track 2 Loaded (Permissioned Domains + MPT shares).  
-Environment: XRPL public Devnet · Library: `xrpl.js@5.2.0-beta.0` · Protocol: XLS-65/66 V1.1
+Environment: XRPL public Devnet · Library: `xrpl.js@5.2.0-beta.1` · Protocol: XLS-65/66 V1.1  
+*(Findings DX-01 through DX-06 were observed on `xrpl.js@5.2.0-beta.0`; project upgraded to beta.1 per organizer update on 2026-09-13.)*
 
 Severity scale: **Low** (minor inconvenience) · **Medium** (workaround required) · **High** (blocks progress or correctness)
 
@@ -256,5 +257,7 @@ TxnSignature: computeSignature(tx, wallet.privateKey, multisignAddress), // via 
 ```
 
 Also update the XLS-66 tutorial to note that `signLoanSetByCounterparty` requires rippled `< 3.4.0` or a patched SDK build until this fix ships.
+
+**Note (2026-09-13):** Organizers updated the required library to `xrpl.js@5.2.0-beta.1`. This version may ship the `encodeForSigningCounterparty` fix — verify on first B1→B5 run. The manual CPT workaround in `scripts/05_investment.ts` is kept for safety until confirmed.
 
 ---

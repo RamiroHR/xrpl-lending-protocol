@@ -13,13 +13,13 @@ Difficulty key: 🟢 easy · 🟡 medium · 🔴 hard / beta SDK / under-documen
 - **Track:** Track 2 — Closed-ended vault, XLS-65/66 V1.1
 - **Flavour:** Loaded — Permissioned Domains + Credentials + MPTs
 - **Network:** XRPL public Devnet (`wss://s.devnet.rippletest.net:51233`)
-- **SDK:** `xrpl.js@5.2.0-beta.0` — mandatory; its beta status is a deliberate DevEx friction surface
+- **SDK:** `xrpl.js@5.2.0-beta.1` — mandatory; its beta status is a deliberate DevEx friction surface
 - **Language:** TypeScript / Node.js
 - **Deliverables:** 10 numbered `.ts` scripts + DevEx feedback report (≥5 issues with proposed fixes) + README + slide deck
 - **No frontend before scripts:** Do not start a React dashboard before all 10 scripts are confirmed working. A terminal demo beats a broken UI.
 - **No app code before hook:** The DevEx hook (`BFT-PARIS-26`) must be installed and verified on every machine before writing a single line of script code.
 - **Phase timing is real-time:** Vault phase transitions are wall-clock on the public Devnet. Compress phases aggressively and set phone alarms for every boundary.
-- **Inspiration only — never a runtime dependency:** Sibling clones below are for pattern stealing. This project always submits txs via `xrpl.js@5.2.0-beta.0` on **public Devnet**. Do not npm-link, import, or copy their network/SDK config into our scripts.
+- **Inspiration only — never a runtime dependency:** Sibling clones below are for pattern stealing. This project always submits txs via `xrpl.js@5.2.0-beta.1` on **public Devnet**. Do not npm-link, import, or copy their network/SDK config into our scripts.
 
 ---
 
@@ -33,7 +33,7 @@ Workspace layout (siblings of **this** repo):
 | **1 — primary** | `../xrpl-js-python-simple-scripts/` | [RippleDevRel/xrpl-js-python-simple-scripts](https://github.com/RippleDevRel/xrpl-js-python-simple-scripts) | Small script samples (MPT, Credentials, Permissioned Domains, …) |
 | **2 — optional fallback only** | `../XRPL/` | Teammate learning sandbox ([RamiroHR/XRPL](https://github.com/RamiroHR/XRPL)) | Glance at simple patterns **only if** primary approaches fail |
 
-**Source of truth:** All product code, Phase 0–E scripts, `.env` / `config/`, and the hackathon submission live in **`xrpl-lending-protocol` only**. Sibling repos are never runtime dependencies (no npm-link, no imports from `../`). Keep our Track 2 client (`config/client.ts`, `xrpl.js@5.2.0-beta.0`, public Devnet).
+**Source of truth:** All product code, Phase 0–E scripts, `.env` / `config/`, and the hackathon submission live in **`xrpl-lending-protocol` only**. Sibling repos are never runtime dependencies (no npm-link, no imports from `../`). Keep our Track 2 client (`config/client.ts`, `xrpl.js@5.2.0-beta.1`, public Devnet).
 
 ### Agent lookup order (do not skip ahead)
 
@@ -118,7 +118,7 @@ Tasks that block everything else. Complete before the hacking session begins.
 #### 0.1 — Environment install
 `All · 15 min · 🟢`
 
-Install Node.js ≥ 20 and `xrpl.js@5.2.0-beta.0`. Confirm that `ts-node` or `tsx` can execute a minimal TypeScript file that connects to the Devnet WebSocket endpoint and reads the server info response.
+Install Node.js ≥ 20 and `xrpl.js@5.2.0-beta.1`. Confirm that `ts-node` or `tsx` can execute a minimal TypeScript file that connects to the Devnet WebSocket endpoint and reads the server info response.
 
 #### 0.2 — DevEx hook installation
 `All · 20 min · 🟢`
@@ -305,7 +305,7 @@ Finalize the over-subscription probe from B2: confirm the protocol's response is
 #### D4 — DevEx feedback report (`docs/DEVEX_REPORT.md`)
 `1 person · 2 h · 🟡`
 
-Write the manual feedback report. State track (Track 2), flavour (Loaded), environment (public XRPL Devnet), and library version (`xrpl.js@5.2.0-beta.0`) at the top. Include ≥5 issues, each following the required format: category, title, description, repro or transaction link, severity, library version, and a concrete proposed fix. Proposed fixes score materially higher than flags alone on the 40% criterion — every issue must have one before it is considered complete. Draw from `docs/DEVEX_LOG.md`; do not reconstruct from memory.
+Write the manual feedback report. State track (Track 2), flavour (Loaded), environment (public XRPL Devnet), and library version (`xrpl.js@5.2.0-beta.1`) at the top. Include ≥5 issues, each following the required format: category, title, description, repro or transaction link, severity, library version, and a concrete proposed fix. Proposed fixes score materially higher than flags alone on the 40% criterion — every issue must have one before it is considered complete. Draw from `docs/DEVEX_LOG.md`; do not reconstruct from memory.
 
 #### D5 — README
 `1 person · 1 h · 🟢`
@@ -379,13 +379,13 @@ Does the rejection explain which phase is required, or does it only say "transac
 PPS does not change when the loan is originated — only when the repayment arrives. This is correct V1.1 behaviour but likely to surprise developers coming from full-accrual mental models. Is it documented clearly in the spec? What would a useful inline SDK warning look like?
 
 #### X3 — `tfVaultDonation` flag coverage · `scripts/06`
-Is this flag documented in the V1.1 spec? Does `xrpl.js@5.2.0-beta.0` expose it as a named constant or require a raw bitmask? Does the SDK include it in type definitions for `VaultDeposit`?
+Is this flag documented in the V1.1 spec? Does `xrpl.js@5.2.0-beta.1` expose it as a named constant or require a raw bitmask? Does the SDK include it in type definitions for `VaultDeposit`?
 
 #### X4 — `lsfMPTRequireAuth` + Permissioned Domains interaction · `scripts/07`
 Is the interaction between these two primitives documented anywhere? When an MPT transfer is rejected because the recipient is not issuer-authorized, does the error explain that reason, or is it opaque? This is the most likely gap in the V1.1 documentation.
 
 #### X5 — Multi-party `LoanSet` coordination · `scripts/05`
-Does `xrpl.js@5.2.0-beta.0` expose a helper for multi-signer flows, or must the developer construct the `Signers` array from raw JSON? Is the expected signing coordination pattern documented in the SDK or only in the ledger spec? **First compare** `../xrpl-reference-app-lending-sav/src/lib/xrpl/loan.ts` — if the reference is clear and the beta SDK is not, that delta is the DevEx finding.
+Does `xrpl.js@5.2.0-beta.1` expose a helper for multi-signer flows, or must the developer construct the `Signers` array from raw JSON? Is the expected signing coordination pattern documented in the SDK or only in the ledger spec? **First compare** `../xrpl-reference-app-lending-sav/src/lib/xrpl/loan.ts` — if the reference is clear and the beta SDK is not, that delta is the DevEx finding.
 
 #### X6 — Devnet explorer vs. ledger documentation consistency · All scripts
 Do V1.1 objects (vault, loan, domain, credentials) render correctly in the Devnet explorer? Are the field names shown in the explorer consistent with the names used in the ledger spec and the SDK type definitions?

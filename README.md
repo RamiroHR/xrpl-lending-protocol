@@ -39,7 +39,7 @@ The fund lifecycle maps onto the three phases of a closed-ended vault:
 | RPC | `https://s.devnet.rippletest.net:51234/` |
 | WSS | `wss://s.devnet.rippletest.net:51233/` |
 | Explorer | [devnet.xrpl.org](https://devnet.xrpl.org) |
-| Library | `xrpl.js@5.2.0-beta.0` |
+| Library | `xrpl.js@5.2.0-beta.1` |
 | Language | TypeScript / Node.js |
 
 ---
@@ -81,7 +81,7 @@ The fund lifecycle maps onto the three phases of a closed-ended vault:
 ## Setup
 
 **Prerequisites**
-- Node.js 18+
+- Node.js ≥ 20
 - XRPL DevEx hook installed — invite code `BFT-PARIS-26`
 
 **Install dependencies**
@@ -90,39 +90,26 @@ The fund lifecycle maps onto the three phases of a closed-ended vault:
 npm install
 ```
 
-**Configure accounts**
+**Create accounts (first time)**
 
 ```bash
 cp .env.example .env
-# Fill in account seeds funded from the Devnet faucet:
-# https://faucet.devnet.rippletest.net/accounts
+npm run setup
 ```
 
-**Run the flow**
+`npm run setup` runs `scripts/01_setup_accounts.ts`: it funds five Devnet wallets via the faucet (`fundWallet`), then writes `*_SEED` and `*_ADDRESS` into `.env` (Investor A/B, Borrower, Broker, Uncredentialed). Never commit `.env`.
 
-Scripts are run sequentially, one per lifecycle step:
+Optional manual alternative: fund wallets at https://faucet.devnet.rippletest.net/accounts and paste seeds into `.env` yourself — addresses can be left blank; scripts derive them from seeds at runtime (or re-run setup to refresh both).
 
-```bash
-# Setup
-npx ts-node scripts/01_setup_accounts.ts
-npx ts-node scripts/02_create_vault.ts
-npx ts-node scripts/03_permissioned_domain.ts
+**Run and verify on Devnet:** see [`TESTING.md`](TESTING.md) for the Phase A smoke and Phase B `b1`–`b5` lifecycle playbook (commands, timing, explorer/RPC checks).
 
-# Subscription phase
-npx ts-node scripts/04_subscription.ts
+---
 
-# Investment phase (wait for SubscriptionDate to pass)
-npx ts-node scripts/05_investment.ts
-npx ts-node scripts/06_coupon_injection.ts
-npx ts-node scripts/07_mpt_transfer.ts
-npx ts-node scripts/08_repayment.ts
+## Verify on Devnet
 
-# Redemption phase (wait for RedemptionDate to pass)
-npx ts-node scripts/09_redemption.ts
+After setup (and after each lifecycle run), confirm results on [devnet.xrpl.org](https://devnet.xrpl.org) using addresses / `VAULT_ID` / tx hashes from `.env` and script stdout.
 
-# Rejection demos (run at any point after setup)
-npx ts-node scripts/10_rejection_demos.ts
-```
+**Playbook:** [`TESTING.md`](TESTING.md)
 
 ---
 
@@ -130,9 +117,10 @@ npx ts-node scripts/10_rejection_demos.ts
 
 ```
 root/
-├── docs/           — strategy, product definition, and DevEx log
+├── docs/           — strategy, product definition, DevEx log, sprint notes
 ├── scripts/        — TypeScript flow scripts (one per lifecycle step)
-├── .env.example    — account seed template (copy to .env — never commit .env)
+├── TESTING.md      — how to verify the build on Devnet
+├── .env.example    — account seed/address template (copy to .env — never commit .env)
 └── README.md
 ```
 

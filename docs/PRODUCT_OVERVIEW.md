@@ -1,6 +1,6 @@
 # XRPL Private Credit Fund — Product Overview
 
-A permissioned, on-chain private credit fund built on the XRPL Lending Protocol. Institutional investors pool capital into a compliance-gated vault, a broker originates a loan to a borrower, and yield flows back to investors through share price appreciation — all settled on-chain with no intermediary custody.
+A permissioned, on-chain private credit fund built on the XRPL Lending Protocol. Each vault is one closed-ended funding campaign: institutional investors who pass on-chain KYC pool capital into that campaign’s vault, a broker originates a loan to a borrower under the campaign mandate, and yield flows back through share price appreciation — all settled on-chain with no intermediary custody.
 
 ---
 
@@ -8,21 +8,25 @@ A permissioned, on-chain private credit fund built on the XRPL Lending Protocol.
 
 Private credit is one of the largest and fastest-growing asset classes globally, yet it remains structurally opaque and illiquid for most participants:
 
-- **Access is gated by relationships and minimums.** Participation is typically reserved for large institutions with direct connections to credit managers.
+- **Access is gated by relationships, not by a portable rule.** Participation often depends on who you know and opaque manager discretion, not on a clear, auditable eligibility status that other participants can verify.
 - **Positions are illiquid.** Once committed, investors are locked in until maturity with no secondary exit path.
 - **Settlement is slow and manual.** Capital calls, interest payments, and repayments involve wire transfers, back-office reconciliation, and trust in counterparties.
 - **Compliance is off-chain.** KYC/AML checks live in external systems that cannot be verified by other participants or enforced at the token level.
+
+This product does **not** claim that private credit becomes open to everyone. Accreditation and KYC remain — often legally required. The problems above are about opacity, illiquidity, and manual settlement *inside* a permissioned market, not about deleting the perimeter.
 
 ---
 
 ## The solution
 
-This protocol brings private credit on-chain using the XRP Ledger's native lending primitives. A single closed-ended vault manages the full fund lifecycle — from investor on-boarding and capital subscription through loan origination, coupon payments, repayment, and final redemption — with every state change recorded as an immutable ledger transaction.
+This protocol brings private credit on-chain using the XRP Ledger's native lending primitives. Each closed-ended vault is best read as **one funding campaign**: a single capital raise with a fixed calendar and a stated mandate (for example, “credit to quantum startups”). Investors who want that theme subscribe to **that** vault; a later campaign under a different mandate is a **new** vault with new dates. The thematic mandate is product narrative and broker underwriting — on-chain, the vault enforces phases and investor credentials, not the industry label of the borrower.
+
+That vault manages the full fund lifecycle — from investor on-boarding and capital subscription through loan origination, coupon payments, repayment, and final redemption — with every state change recorded as an immutable ledger transaction.
 
 Three properties distinguish this from a simple tokenised bond:
 
-**1. Compliance enforced at the token level.**
-Investors must hold a KYC Credential issued by the fund manager's Permissioned Domain before they can deposit capital or receive vault shares. The credential check is not a front-end gatekeeping layer — it is enforced by the protocol itself. An uncredentialed address cannot deposit, full stop.
+**1. Compliance enforced at the token level — without recreating relationship opacity.**
+Investors must hold a KYC Credential issued by the fund manager's Permissioned Domain before they can deposit capital or receive vault shares. Accreditation still gates access; what changes is *how*. Eligibility becomes an on-chain, auditable credential rather than an off-chain relationship, and once issued it is enforced by the protocol itself — not a front-end gatekeeping layer. An uncredentialed address cannot deposit, full stop. The same perimeter then enables the liquidity and settlement improvements below, instead of deepening the “who you know” problem.
 
 **2. Vault shares are tradeable, not locked.**
 During the locked Investment phase (when deposits and withdrawals are both blocked), credentialed investors can transfer their vault shares to other credentialed investors. This gives participants a pre-maturity exit path without breaking the fund's lifecycle or the compliance perimeter. Share transfers are restricted to issuer-authorized holders, so the KYC ring is preserved end-to-end.
@@ -64,11 +68,12 @@ The borrower repays principal plus accrued interest. The repayment lands in the 
 
 ### Permissioned access (Permissioned Domains & Credentials)
 
-The fund manager creates a Permissioned Domain on-ledger and issues KYC Credentials to verified investors. The vault is configured to require a valid credential for deposits. This creates an on-chain KYC ring that:
+The fund manager creates a Permissioned Domain on-ledger and issues KYC Credentials to verified **investors** (borrower fitness for the campaign mandate — e.g. “is this a real quantum startup?” — remains off-chain underwriting before `LoanSet`). The vault is configured to require a valid credential for deposits. This creates an on-chain KYC ring that:
 
 - Rejects uncredentialed deposits automatically, without any application-layer logic.
 - Restricts MPT share transfers to issuer-authorized holders.
 - Makes the compliance perimeter auditable by any third party reading the ledger.
+- Keeps the market permissioned while removing relationship opacity: once credentialed, rights are protocol rules, not private manager discretion.
 
 ### Vault shares as transferable positions (MPTs)
 

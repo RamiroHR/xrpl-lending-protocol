@@ -8,11 +8,17 @@
     "setup": "tsx scripts/01_setup_accounts.ts",
     "smoke:a2": "tsx scripts/smoke_a2_vault_create.ts",
     "smoke:a3": "tsx scripts/smoke_a3_deposit_withdraw.ts",
-    "smoke:a4": "tsx scripts/smoke_a4_loan_set.ts"
+    "smoke:a4": "tsx scripts/smoke_a4_loan_set.ts",
+    "b0": "tsx scripts/00b_fund_accounts.ts",
+    "b1": "tsx scripts/02_create_vault.ts",
+    "b2": "tsx scripts/04_subscription.ts",
+    "b3": "tsx scripts/05_investment.ts",
+    "b4": "tsx scripts/08_repayment.ts",
+    "b5": "tsx scripts/09_redemption.ts"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
-    "xrpl": "5.2.0-beta.0"
+    "xrpl": "^5.2.0-beta.1"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
