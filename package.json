@@ -1,0 +1,21 @@
+{
+  "name": "xrpl-lending-protocol",
+  "version": "0.1.0",
+  "description": "XRPL permissioned private credit fund — Track 2 Loaded (XLS-65/66 V1.1)",
+  "private": true,
+  "scripts": {
+    "smoke": "tsx scripts/00_smoke_devnet.ts"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "xrpl": "5.2.0-beta.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
