@@ -23,6 +23,10 @@ dotenv.config();
 const SUBSCRIPTION_SECONDS = 120;  // 2-min subscription window
 const REDEMPTION_SECONDS   = 900;  // 15-min investment window (sub=120 + interval=300 + grace=300 + ~180 buffer)
 
+// C1: if DOMAIN_ID is present in .env, the vault is credential-gated (VaultDeposit
+// requires the depositor to hold a credential from the domain's AcceptedCredentials).
+const DOMAIN_ID = process.env.DOMAIN_ID ?? null;
+
 async function main(): Promise<void> {
   console.log('=== B1: Create Production Vault ===\n');
 
@@ -37,6 +41,11 @@ async function main(): Promise<void> {
     console.log('Phase boundaries (wall-clock):');
     console.log(`  Subscription ends  : ${rippleTimeToISO(subDate)}  (in ${SUBSCRIPTION_SECONDS}s)`);
     console.log(`  Redemption opens   : ${rippleTimeToISO(redemptionDate)}  (in ${REDEMPTION_SECONDS}s)`);
+    if (DOMAIN_ID) {
+      console.log(`  PermissionedDomain : ${DOMAIN_ID}  (credential-gated deposits)`);
+    } else {
+      console.log(`  PermissionedDomain : none  (run c1 first to enable credential gate)`);
+    }
     console.log();
     console.log('⚠️  Run 04_subscription.ts NOW — subscription window closes in 2 minutes.');
     console.log('⚠️  Run 05_investment.ts within 30 minutes (before redemption opens).\n');
@@ -50,6 +59,8 @@ async function main(): Promise<void> {
       VaultKind: 1,
       SubscriptionDate: subDate,
       RedemptionDate: redemptionDate,
+      // C1: attach Permissioned Domain if set; gates VaultDeposit to credentialed accounts
+      ...(DOMAIN_ID ? { PermissionedDomainID: DOMAIN_ID } : {}),
     };
 
     console.log('Submitting VaultCreate...');
