@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "xrpl-dev": {
+      "source": "xrpl-commons/xrpl-dev-skill",
+      "sourceType": "github",
+      "skillPath": "skill/SKILL.md",
+      "computedHash": "5dace9f95e953f2cea93c3b8c42c1443512fd8082521bb364d4116a1fcad95bb"
+    }
+  }
+}
