@@ -1,0 +1,41 @@
+# Claude Code — ignore internals, keep skills
+.claude/*
+!.claude/skills/
+!.claude/skills/**
+
+# Docs — share only PRODUCT_DEFINITION and DEVEX_LOG
+docs/BRAINSTORM.md
+docs/initial-thin-idea.md
+
+# Dependencies
+node_modules/
+
+# Environment — account seeds and secrets, never commit
+.env
+.env.local
+.env.*.local
+
+# TypeScript build output
+dist/
+build/
+*.js.map
+
+# Compiled JS (keep .ts source, ignore compiled output)
+scripts/*.js
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
