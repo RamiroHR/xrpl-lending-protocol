@@ -27,37 +27,23 @@ Difficulty key: 🟢 easy · 🟡 medium · 🔴 hard / beta SDK / under-documen
 
 Workspace layout (siblings of **this** repo):
 
-| Local path (from `xrpl-lending-protocol/`) | Upstream | Use for |
-|---|---|---|
-| `../XRPL/` | Team mate repo ([RamiroHR/XRPL](https://github.com/RamiroHR/XRPL)) — **team-owned WIP** | Shared experiments, account tooling, early Track 2 scripts the partner lands first |
-| `../xrpl-reference-app-lending-sav/` | [ripple/xrpl-reference-app-lending-sav](https://github.com/ripple/xrpl-reference-app-lending-sav) | End-to-end SAV + lending UX and XRPL helper modules |
-| `../xrpl-js-python-simple-scripts/` | [RippleDevRel/xrpl-js-python-simple-scripts](https://github.com/RippleDevRel/xrpl-js-python-simple-scripts) | Small script samples closer to our 10-script layout |
+| Priority | Local path (from `xrpl-lending-protocol/`) | Upstream | Role |
+|---|---|---|---|
+| **1 — primary** | `../xrpl-reference-app-lending-sav/` | [ripple/xrpl-reference-app-lending-sav](https://github.com/ripple/xrpl-reference-app-lending-sav) | End-to-end SAV + lending patterns |
+| **1 — primary** | `../xrpl-js-python-simple-scripts/` | [RippleDevRel/xrpl-js-python-simple-scripts](https://github.com/RippleDevRel/xrpl-js-python-simple-scripts) | Small script samples (MPT, Credentials, Permissioned Domains, …) |
+| **2 — optional fallback only** | `../XRPL/` | Teammate learning sandbox ([RamiroHR/XRPL](https://github.com/RamiroHR/XRPL)) | Glance at simple patterns **only if** primary approaches fail |
 
-**Agent rule (external inspiration):** Before inventing `VaultCreate` / `LoanSet` / Credential / MPT / TokenEscrow payload shapes, **search and read** the sibling paths below. Prefer adapting field names and signing flows from those files over guessing. If the sibling uses a different `xrpl.js` version or network, keep **our** Track 2 client (`config/client.ts`) and only reuse transaction construction patterns. Log SDK/doc mismatches vs these references into `docs/DEVEX_LOG.md`.
+**Source of truth:** All product code, Phase 0–E scripts, `.env` / `config/`, and the hackathon submission live in **`xrpl-lending-protocol` only**. Sibling repos are never runtime dependencies (no npm-link, no imports from `../`). Keep our Track 2 client (`config/client.ts`, `xrpl.js@5.2.0-beta.0`, public Devnet).
 
-**Agent rule (teammate `../XRPL/`):** This is **not** third-party inspiration — it is the other half of a 2-person team. Before starting a Phase A–D script in **this** repo:
+### Agent lookup order (do not skip ahead)
 
-1. `git -C ../XRPL pull` (or ask the human) so you are not coding against a stale clone.
-2. Search `../XRPL/` for matching scripts, helpers, or notebooks (e.g. account setup, vault/loan smoke tests).
-3. Prefer **porting / merging** teammate work into `xrpl-lending-protocol/` (the submission repo) over re-implementing from scratch. Do not leave two divergent copies of the same script.
-4. Keep a single source of truth for seeds: our `.env` / `config/accounts.ts` five-role model (Investor A, Investor B, Borrower, Broker, Uncredentialed). If `../XRPL/` still uses older names (`lender` only, 3 accounts), adapt to the five-role model from `docs/PRODUCT_DEFINITION.md`.
-5. Submission GitHub for the hackathon is **this** repo unless the team explicitly decides otherwise.
+1. Implement from `docs/PRODUCT_DEFINITION.md` + this plan + V1.1 / XRPL docs.
+2. If stuck on payload shape or signing: search **primary** siblings (tables below).
+3. Open `../XRPL/` **only when** steps 1–2 still fail **and** the stuck area is one listed under “Teammate sandbox — when to glance”. Do **not** pull/merge from `../XRPL/` by default. Do **not** treat its `package.json` script names as a second backlog.
 
-### High-value paths in the teammate repo (`../XRPL/`)
+Log SDK/doc mismatches vs primary references into `docs/DEVEX_LOG.md`.
 
-As of the last sync, this repo is evolving quickly (GitHub “upload” commits). Always re-list the tree after pull.
-
-| Concern | Start here (check after pull) |
-|---|---|
-| Package scripts / intended Phase A–B entrypoints | `../XRPL/package.json` (`setup:accounts`, `test:vault-*`, `phase-b:*`) |
-| TypeScript config alignment | `../XRPL/tsconfig.json` |
-| Notebook-driven account funding (Track 2 Devnet) | `../XRPL/createAccounts.ipynb` |
-| Legacy JS faucet helper (3 roles) | `../XRPL/createAccounts.js` — prefer five-role TS setup once `scripts/` exists |
-| Any new `scripts/**/*.ts` the partner adds | `../XRPL/scripts/` — **primary merge source** when present |
-
-**Known gap to watch:** `../XRPL/package.json` may reference `scripts/*.ts` before those files are pushed. If `scripts/` is missing, do not invent from script names alone — implement in **this** repo (or wait for the teammate push) and keep naming consistent with `docs/PLANNING.md` script inventory.
-
-### High-value paths in the reference app
+### High-value paths in the reference app (primary)
 
 | Concern | Start here |
 |---|---|
@@ -68,7 +54,7 @@ As of the last sync, this repo is evolving quickly (GitHub “upload” commits)
 | Broker UI flow (loan) | `../xrpl-reference-app-lending-sav/src/app/dashboard/broker/issue-loan.tsx` |
 | Loan math helpers | `../xrpl-reference-app-lending-sav/src/lib/loan-math.ts` |
 
-### High-value paths in simple-scripts
+### High-value paths in simple-scripts (primary)
 
 | Concern | Start here |
 |---|---|
@@ -78,6 +64,32 @@ As of the last sync, this repo is evolving quickly (GitHub “upload” commits)
 | TokenEscrow (stretch D7) | `../xrpl-js-python-simple-scripts/devnet/tokenEscrow.js` |
 | Account generate / faucet patterns | `../xrpl-js-python-simple-scripts/js/generate.js`, `../xrpl-js-python-simple-scripts/js/xrp_transaction.js` |
 | DevNet README / which samples apply | `../xrpl-js-python-simple-scripts/devnet/README.md`, `../xrpl-js-python-simple-scripts/js/README.md` |
+
+### Teammate sandbox `../XRPL/` — optional glance only
+
+**What it is:** A beginner playground for the second teammate (simple XRPL experiments). **Not** a parallel implementation of this product. **Not** a merge source for agentic-army.
+
+**What it currently illustrates** (re-check the tree after an optional pull; content changes often):
+
+| Area | Status in sandbox | Files to glance at if needed |
+|---|---|---|
+| Connect to public Devnet WSS | Tested pattern | `../XRPL/createAccounts.js` (`xrpl.Client`, `connect` / `disconnect`) |
+| Fund wallets via Devnet faucet (`client.fundWallet()`) | Tested pattern | `../XRPL/createAccounts.js` |
+| Print address + seed for a few named roles | Tested (3 roles: broker / lender / borrower — **not** our five-role model) | `../XRPL/createAccounts.js`, notebook notes in `../XRPL/createAccounts.ipynb` |
+| Same beta dependency pin (`xrpl@5.2.0-beta.0`) | Confirmed in sandbox `package.json` | Useful only as “beta package resolves” smoke — we already pin this here |
+| Vault / LoanSet / Permissioned Domains / MPT product scripts | **Not present** as real sources | Ignore `package.json` npm script *names* that point at missing `scripts/*.ts` — those are aspirational labels, not code to port |
+
+**When an agent may open `../XRPL/`:**
+
+- Stuck on **Devnet connect** or **`fundWallet` / faucet** after primary simple-scripts patterns failed.
+- Human explicitly asks to compare with the teammate’s tested snippet.
+
+**When an agent must not use `../XRPL/`:**
+
+- Starting any Phase A–E feature by default.
+- Deciding account roles, vault/loan payloads, Credentials, MPTs, or submission structure.
+- “Merging” or re-homing product scripts from the sandbox into this repo unless the human requests a one-off copy of a tiny pattern.
+- Treating sandbox role names (`lender` only, 3 accounts) as replacing Investor A/B + Uncredentialed.
 
 ---
 
@@ -149,7 +161,7 @@ Verify that the beta SDK can execute every primitive the full flow needs before 
 
 Hit the public Devnet faucet for all five accounts, write the resulting seeds to `.env`, and log each starting XRP balance to stdout. Funded balances must cover XRP reserves for every object each account will own, plus the amounts deposited or loaned, plus buffer for fees.
 
-**Inspiration / team sync:** Pull `../XRPL/` first. Prefer merging teammate `scripts/01_setup_accounts.ts` (or notebook flow in `createAccounts.ipynb`) into this repo. Fallback patterns: `../xrpl-js-python-simple-scripts/js/generate.js`. Align on five roles — not the legacy 3-account `createAccounts.js` (`broker`/`lender`/`borrower`) alone.
+**Inspiration:** faucet / wallet patterns in `../xrpl-js-python-simple-scripts/js/generate.js` and `xrp_transaction.js` (adapt to our five roles + public Devnet). Optional last glance: `../XRPL/createAccounts.js` only if `fundWallet` still fails — remember it uses 3 roles (`broker`/`lender`/`borrower`), not our five.
 
 #### A2 — VaultCreate smoke-test
 `1 person · 30 min · 🟡`

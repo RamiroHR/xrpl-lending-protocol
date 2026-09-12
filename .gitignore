@@ -3,9 +3,10 @@
 !.claude/skills/
 !.claude/skills/**
 
-# Docs — share only PRODUCT_DEFINITION and DEVEX_LOG
+# Docs — internal / replaced files
 docs/BRAINSTORM.md
 docs/initial-thin-idea.md
+docs/PRODUCT_DEFINITION.md
 
 # Dependencies
 node_modules/
