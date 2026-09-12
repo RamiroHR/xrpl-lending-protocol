@@ -175,16 +175,105 @@ Leave for Phase C/D (Loaded + polish):
 
 ---
 
-## 3. Later phases (Loaded + polish)
+## 3. Phase C — Loaded primitives (credential gate + MPT compliance ring)
 
-Not required to prove the Track 2 minimum bar; check when scripts exist:
+Phase C adds the KYC layer that differentiates this from vanilla Track 2.  
+**Branch:** `phase-c-loaded` · **Prerequisite:** Phase B working end-to-end.
 
-- **`npx tsx scripts/03_permissioned_domain.ts`** — KYC: Permissioned Domain + Credentials (+ MPT auth) before gated deposits
-- **`npx tsx scripts/06_coupon_injection.ts`** — Mid-Investment coupon via `VaultDeposit` + `tfVaultDonation` (observable PPS rise)
-- **`npx tsx scripts/07_mpt_transfer.ts`** — Pre-maturity exit: share transfer A→B; reject transfer to uncredentialed
-- **`npx tsx scripts/10_rejection_demos.ts`** — Wrong-phase txs rejected (deposit/withdraw/loan at illegal times)
+### What Phase C proves
 
-Verify: uncredentialed deposit rejected; MPT transfer A→B OK / A→uncredentialed rejected; PPS rises on donation; wrong-phase txs fail with captured errors.
+| Proof | How |
+|---|---|
+| Only credentialed investors can deposit | Uncredentialed `VaultDeposit` → rejected verbatim |
+| MPT shares can only move within the KYC ring | A→uncredentialed transfer → rejected verbatim |
+| Pre-maturity exit works between credentialed investors | A→B transfer → succeeds |
+
+### One-time setup vs per-run
+
+`c1` creates on-chain objects that **persist** — credentials don't expire for a year, the domain doesn't change. Run it once per set of accounts. The `b0`–`b5` lifecycle can be re-run as many times as needed against the same domain and credentials.
+
+### Run order
+
+```bash
+# ── One-time setup (run once per account set) ──────────────────────────────
+npm run c1       # create PermissionedDomain + issue KYC_VERIFIED credentials
+                 # writes DOMAIN_ID / CREDENTIAL_TYPE / CREDENTIAL_ISSUER to .env
+
+# ── Credential-gated lifecycle (repeat for each test run) ──────────────────
+npm run b0       # top up all accounts
+npm run b1       # new vault — this time WITH PermissionedDomainID from .env
+npm run b2       # subscription: credentialed deposits + uncred rejection probe (C3)
+npm run c2       # MPT authorization: lsfMPTRequireAuth + authorize InvestorA/B
+npm run b3       # loan origination + drawdown (Investment phase)
+npm run b4       # loan repayment (cash-basis PPS proof)
+npm run c4       # MPT share transfer A→B (success) + A→uncredentialed (reject)
+npm run b5       # redemption: withdraw + burn shares
+```
+
+> **Important:** `b2` must still run within ~2 minutes of `b1`. All other scripts self-gate.
+
+### What `npm run c1` does
+
+1. **Creates a Permissioned Domain** (Broker is owner)  
+   A `PermissionedDomain` ledger object that declares: *any depositor must hold a `KYC_VERIFIED` credential issued by the Broker.*  
+   The domain has no effect until a vault references it via `PermissionedDomainID`.
+
+2. **Issues `KYC_VERIFIED` credential to InvestorA** (`CredentialCreate`)  
+   Broker is the credential issuer; InvestorA is the subject.
+
+3. **Issues `KYC_VERIFIED` credential to InvestorB** (`CredentialCreate`)  
+   Same for InvestorB.
+
+4. **Both investors accept their credentials** (`CredentialAccept`)  
+   A credential is only active once the subject accepts it. Pending credentials are ignored by the protocol.
+
+5. **Uncredentialed account receives nothing** — no credential at all.
+
+6. **Writes to `.env`:**  
+   `DOMAIN_ID`, `CREDENTIAL_TYPE` (hex), `CREDENTIAL_ISSUER` (Broker address)
+
+After `c1`, `b1` reads `DOMAIN_ID` from `.env` and includes it in `VaultCreate` as `PermissionedDomainID`. That one field is what activates the credential gate on `VaultDeposit`.
+
+### What to verify after each Phase C step
+
+**After `c1`:**
+- Broker account on explorer → shows `PermissionedDomain` object
+- InvestorA/B accounts → show accepted `KYC_VERIFIED` credential
+- Uncredentialed account → no credential
+- `.env` has `DOMAIN_ID` (64-char hex), `CREDENTIAL_TYPE`, `CREDENTIAL_ISSUER`
+
+**After `b1` (credential-gated vault):**
+- `vault_info` → `PermissionedDomainID` field present
+- Domain ID matches `DOMAIN_ID` in `.env`
+
+**After `b2` (subscription + C3 rejection probe):**
+- InvestorA/B `VaultDeposit` → `tesSUCCESS`
+- Uncredentialed `VaultDeposit` → rejected; capture error code verbatim
+
+**After `c2` (MPT auth):**
+- Vault `ShareMPTID` issuance → `lsfMPTRequireAuth` flag set
+- InvestorA/B MPTokens → marked as authorized
+- Uncredentialed → no authorization
+
+**After `c4` (MPT transfer):**
+- A→B transfer of half InvestorA's shares → `tesSUCCESS`
+- A→uncredentialed transfer → rejected; capture error code verbatim
+- InvestorB share balance increased; InvestorA decreased
+
+### Re-running Phase C
+
+If accounts are re-created (new seeds), run `c1` again to re-issue credentials. Otherwise skip `c1` and go straight to `b0 → b1 → b2 → c2 → b3 → b4 → c4 → b5`.
+
+### RPC: check credential on-chain
+
+```bash
+# Replace INVESTOR_A_ADDRESS with the value from .env
+curl -s -X POST https://s.devnet.rippletest.net:51234/ \
+  -H 'Content-Type: application/json' \
+  -d '{"method":"account_objects","params":[{"account":"INVESTOR_A_ADDRESS","type":"credential","ledger_index":"validated"}]}'
+```
+
+Expect one object with `CredentialType` matching `CREDENTIAL_TYPE` from `.env` and `Flags` with the accepted bit set (`0x00010000`).
 
 ---
 
