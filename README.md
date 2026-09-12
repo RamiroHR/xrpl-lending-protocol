@@ -5,26 +5,45 @@
 Built for the **XRPL Lending Protocol Hackathon · September 12–13, 2026**
 Hosted by DeVinci Blockchain and Ripple · IIM Paris–La Défense
 
+Target product story: [`docs/PRODUCT_OVERVIEW.md`](docs/PRODUCT_OVERVIEW.md). What is runnable today vs still planned is in **Implementation status** below.
+
 ---
 
 ## Overview
 
-This project implements a permissioned, closed-ended private credit fund on the XRPL Lending Protocol V1.1. Investors hold on-chain KYC credentials to subscribe; vault shares are MPTs transferable within the compliance ring; a broker deploys capital via a structured loan during the locked Investment phase.
+This project implements a permissioned, closed-ended private credit fund on the XRPL Lending Protocol V1.1. The Track 2 **minimum bar** is live on Devnet (create vault → subscribe → lend → repay → redeem). The **Loaded** flavour (Permissioned Domains, credential gates, MPT transfer perimeter, coupon injection) is the intended end state — see the checklist.
 
 The fund lifecycle maps onto the three phases of a closed-ended vault:
 
 | Phase | What happens |
 |---|---|
-| **Subscription** | Credentialed investors deposit XRP; MPT fund shares are minted. Non-credentialed deposits are rejected at the protocol level. |
-| **Investment** | Deposits and withdrawals are blocked. The broker originates a loan, the borrower draws down, and a mid-term coupon is injected via `VaultDeposit` with `tfVaultDonation`. Credentialed investors can transfer shares between each other (pre-maturity exit). |
-| **Redemption** | Borrower repays; investors withdraw principal plus yield; MPT shares are burned. |
+| **Subscription** | Investors deposit XRP; MPT fund shares are minted. *(Loaded: only credentialed depositors; uncredentialed rejected.)* |
+| **Investment** | Deposits and withdrawals are blocked. The broker originates a loan and the borrower draws down. *(Loaded: mid-term coupon via `tfVaultDonation`; share transfers within the KYC ring.)* |
+| **Redemption** | Borrower repays; investors withdraw principal (plus yield when coupons / interest are demonstrated); MPT shares are burned. |
 
-### Key differentiators
+### Implementation status
 
-- **Permissioned Domains** gate who can deposit and hold shares — compliance enforced on-chain, not off-chain policy
-- **MPT `lsfMPTRequireAuth`** enforces the KYC ring at the token transfer level
-- **Pre-maturity exit** via MPT share transfer between credentialed investors during the locked Investment phase
-- **Coupon injection** (`tfVaultDonation`) demonstrated explicitly with before/after PPS verification
+**Done (Track 2 minimum bar — Phase B)**
+
+- [x] Five Devnet roles funded (`npm run setup` / `b0`)
+- [x] Closed-ended `VaultCreate` with `SubscriptionDate` / `RedemptionDate` (`b1`)
+- [x] Investor A/B `VaultDeposit` → MPT shares minted (`b2`)
+- [x] `LoanBrokerSet` + multi-party `LoanSet` + drawdown (`b3`)
+- [x] Borrower `LoanPay` with cash-basis PPS / `AssetsTotal` logging (`b4`)
+- [x] Investor A/B `VaultWithdraw` / share burn (`b5`)
+- [x] Phase A smoke path (`smoke:a2`–`a4`) and DevEx hook invite
+
+**Not yet (Loaded + polish — Phase C/D)**
+
+- [ ] Permissioned Domain + KYC Credentials issued to investors
+- [ ] Credential-gated deposits (uncredentialed `VaultDeposit` rejected)
+- [ ] MPT `lsfMPTRequireAuth` authorization ring
+- [ ] Pre-maturity MPT share transfer A→B; transfer to uncredentialed rejected
+- [ ] Coupon injection (`VaultDeposit` + `tfVaultDonation`) with before/after PPS
+- [ ] Wrong-phase rejection demos (`10_rejection_demos.ts`)
+- [ ] README on-chain tx table filled with explorer links
+
+Run and verify the done path: [`TESTING.md`](TESTING.md).
 
 ---
 
@@ -34,7 +53,7 @@ The fund lifecycle maps onto the three phases of a closed-ended vault:
 |---|---|
 | Track | **Track 2** — closed-ended vault |
 | Protocol | Lending Protocol **V1.1** |
-| Flavour | **Loaded** — Permissioned Domains & Credentials + MPTs |
+| Flavour | **Loaded** target — Permissioned Domains & Credentials + MPTs *(minimum bar scripts ship first; Loaded scripts TBD)* |
 | Network | Public XRPL Devnet |
 | RPC | `https://s.devnet.rippletest.net:51234/` |
 | WSS | `wss://s.devnet.rippletest.net:51233/` |
@@ -46,16 +65,18 @@ The fund lifecycle maps onto the three phases of a closed-ended vault:
 
 ## XLS-65 / XLS-66 transactions
 
-| Transaction | Phase | Script |
-|---|---|---|
-| `VaultCreate` | Setup | `scripts/02_create_vault.ts` |
-| `VaultDeposit` — investor | Subscription | `scripts/04_subscription.ts` |
-| `VaultDeposit` — `tfVaultDonation` coupon | Investment | `scripts/06_coupon_injection.ts` |
-| `LoanSet` — multi-party | Investment | `scripts/05_investment.ts` |
-| Loan drawdown | Investment | `scripts/05_investment.ts` |
-| Loan repayment | Investment | `scripts/08_repayment.ts` |
-| `VaultWithdraw` | Redemption | `scripts/09_redemption.ts` |
-| Phase-gate rejections | All phases | `scripts/10_rejection_demos.ts` |
+| Transaction | Phase | Script | Status |
+|---|---|---|---|
+| `VaultCreate` | Setup | `scripts/02_create_vault.ts` | Done |
+| `VaultDeposit` — investor | Subscription | `scripts/04_subscription.ts` | Done |
+| `LoanSet` — multi-party | Investment | `scripts/05_investment.ts` | Done |
+| Loan drawdown | Investment | `scripts/05_investment.ts` | Done |
+| Loan repayment | Investment | `scripts/08_repayment.ts` | Done |
+| `VaultWithdraw` | Redemption | `scripts/09_redemption.ts` | Done |
+| `VaultDeposit` — `tfVaultDonation` coupon | Investment | `scripts/06_coupon_injection.ts` | Not yet |
+| Permissioned Domain / Credentials | Setup | `scripts/03_permissioned_domain.ts` | Not yet |
+| MPT share transfer (+ rejection) | Investment | `scripts/07_mpt_transfer.ts` | Not yet |
+| Phase-gate rejections | All phases | `scripts/10_rejection_demos.ts` | Not yet |
 
 ---
 

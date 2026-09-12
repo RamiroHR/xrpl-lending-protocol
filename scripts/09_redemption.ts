@@ -74,6 +74,11 @@ async function main(): Promise<void> {
 
     // ── InvestorA withdrawal ──────────────────────────────────────────────
     const withdrawAmountA = proportionalDrops(sharesA, totalShares, assetsAvail);
+    // Skip if amount is 0 or too small — vault rejects dust withdrawals with
+    // tecPRECISION_LOSS when the share-burn ratio can't be represented precisely.
+    if (BigInt(withdrawAmountA) < 1000n) {
+      console.log(`InvestorA computed withdrawal = ${withdrawAmountA} drops — skipping dust (tecPRECISION_LOSS risk).\n`);
+    } else {
     console.log(`Withdrawing ${Number(withdrawAmountA) / 1e6} XRP for InvestorA...`);
     const wdATx = {
       TransactionType: 'VaultWithdraw',
@@ -93,14 +98,17 @@ async function main(): Promise<void> {
     console.log(`    Explorer: https://devnet.xrpl.org/transactions/${wdAResult.result.hash}`);
     const sharesAAfter = await fetchShareBalance(client, investorA.classicAddress, shareMPTID);
     console.log(`    Shares remaining: ${sharesAAfter}  (expect 0)\n`);
+    } // end else (withdrawAmountA !== '0')
 
     // ── InvestorB withdrawal — use updated AssetsAvailable ────────────────
     const vaultAfterA    = await fetchVaultInfo(client, vaultId);
     const assetsAfterA   = vaultAfterA.AssetsAvailable as string ?? '0';
     const totalAfterA    = await fetchTotalShares(client, shareMPTID);
 
-    // InvB gets all remaining available assets (they're the only holder left)
-    const withdrawAmountB = assetsAfterA;
+    // InvB gets their proportional share — don't assume A's shares are 0 (floor
+    // division in A's withdrawal can leave a 1-share dust position that reserves
+    // 1 drop; taking all of assetsAfterA would exceed B's entitlement).
+    const withdrawAmountB = proportionalDrops(sharesB, totalAfterA, assetsAfterA);
     console.log(`Withdrawing ${Number(withdrawAmountB) / 1e6} XRP for InvestorB (remaining)...`);
     const wdBTx = {
       TransactionType: 'VaultWithdraw',
