@@ -27,8 +27,9 @@ scripts/*.js
 *.log
 npm-debug.log*
 
-# Editor
+# Editor / agents — local only (DevEx skills/hooks use absolute paths)
 .vscode/
+.cursor/
 .idea/
 *.swp
 *.swo
@@ -39,3 +40,11 @@ Thumbs.db
 
 # Test coverage
 coverage/
+.xrpl-devex/
+.claude/settings.local.json
+
+# XRPL DevEx Capture — install locally, do not vendor in git
+xrpl-devex-hook/
+
+# sprints
+docs/sprints/
