@@ -317,7 +317,9 @@ Role addresses for reading explorer metadata: see [`pitch.html`](pitch.html) On-
 ## Related docs
 
 - [`README.md`](README.md) — product + setup + verified tx links  
-- [`pitch.html`](pitch.html) — presentation / recorded Demo slide (same lifecycle steps)  
+- [`pitch.html`](pitch.html) — presentation / recorded Demo slide (same lifecycle steps)
+- [`docs/demo/run_console_phase_c_2026-09-13.txt`](docs/demo/run_console_phase_c_2026-09-13.txt) — full Phase C Devnet console (tracked; pitch embeds excerpts)  
+  
 - [`DEVEX_FEEDBACK.md`](DEVEX_FEEDBACK.md) — manual DevEx narrative (repo root)  
 - [`docs/DEVEX_LOG.md`](docs/DEVEX_LOG.md) — structured findings DX-01…  
 - [`docs/CREDENTIAL_GATE.md`](docs/CREDENTIAL_GATE.md) — how the KYC gate works  
