@@ -283,6 +283,31 @@ After a successful B1→B5 (and later C/D) run, copy explorer links into [`READM
 
 ---
 
+## 5. Phase D — coupon injection and rejection demos
+
+These scripts run against an existing vault. A completed B or C lifecycle run with a valid `VAULT_ID` in `.env` is required for `d1`. `d2` creates its own fresh vault.
+
+```bash
+npm run d1   # coupon injection probe — VaultDeposit with candidate tfVaultDonation flag; logs PPS before/after
+npm run d2   # phase-gate rejection demos — creates fresh open-ended vault; captures 3+ verbatim rejection codes
+```
+
+### What to verify
+
+**After `npm run d1`:**
+- Script exits 0 regardless of outcome (it is a probe)
+- If `tesSUCCESS`: PPS after > PPS before; AssetsTotal increased by 1,000,000 drops
+- If error: rejection code logged verbatim (see [DX-13] note in script output)
+- Explorer link in stdout
+
+**After `npm run d2`:**
+- Script exits 0 (non-fatal — all rejections are captured as data)
+- At least 3 rejection codes logged verbatim (e.g. `tecNO_PERMISSION`, `tecINSUFFICIENT_FUNDS`, `tecNO_ENTRY`)
+- Summary table printed at end
+- Explorer links in stdout for each probe tx
+
+---
+
 ## Related docs
 
 - [`README.md`](README.md) — product overview + setup  

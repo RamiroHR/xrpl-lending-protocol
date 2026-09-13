@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XRPL Private Credit Fund — Pitch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Syne:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg0: #e8eef4;
+  --bg1: #f4f7fa;
+  --ink: #0f1c2e;
+  --muted: #5a6b7d;
+  --line: rgba(15, 28, 46, 0.12);
+  --panel: rgba(255, 255, 255, 0.72);
+  --accent: #0a7c6e;
+  --accent-2: #1a5f8a;
+  --warn: #b45309;
+  --ok: #0a7c6e;
+  --bad: #b91c1c;
+  --glow: rgba(10, 124, 110, 0.18);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  min-height: 100vh;
+  color: var(--ink);
+  font-family: "DM Sans", system-ui, sans-serif;
+  line-height: 1.55;
+  background:
+    radial-gradient(900px 480px at 12% -10%, var(--glow), transparent 55%),
+    radial-gradient(700px 420px at 100% 0%, rgba(26, 95, 138, 0.14), transparent 50%),
+    linear-gradient(165deg, var(--bg0), var(--bg1) 45%, #eef3f7);
+  -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(to bottom, black, transparent 85%);
+}
+.display { font-family: Syne, sans-serif; letter-spacing: -0.03em; }
+
+nav {
+  position: sticky; top: 0; z-index: 40;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 14px 28px;
+  background: rgba(244, 247, 250, 0.88);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.brand strong { font-family: Syne, sans-serif; font-size: 15px; font-weight: 700; }
+.brand span { font-size: 11px; color: var(--muted); }
+.nav-links { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+.nav-btn {
+  border: 0; background: transparent; cursor: pointer;
+  font: inherit; font-size: 12px; font-weight: 500; color: var(--muted);
+  padding: 7px 10px; border-radius: 8px; transition: 0.18s ease;
+}
+.nav-btn:hover { color: var(--ink); background: rgba(15, 28, 46, 0.05); }
+.nav-btn.active { color: var(--accent); background: rgba(10, 124, 110, 0.1); }
+
+.deck { max-width: 1080px; margin: 0 auto; padding: 28px 28px 80px; }
+.slide {
+  display: none;
+  animation: rise 0.38s ease both;
+}
+.slide.active { display: block; }
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+.eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 14px;
+}
+h1 {
+  font-family: Syne, sans-serif; font-weight: 700;
+  font-size: clamp(28px, 4.2vw, 46px); line-height: 1.08;
+  max-width: 18ch; margin-bottom: 16px;
+}
+h1 em { font-style: normal; color: var(--accent); }
+.lead { font-size: 17px; color: var(--muted); max-width: 54ch; margin-bottom: 28px; }
+.h2 {
+  font-family: Syne, sans-serif; font-weight: 700;
+  font-size: clamp(24px, 3.2vw, 36px); line-height: 1.15; margin-bottom: 12px;
+}
+
+.meta-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+.chip {
+  font-size: 12px; font-weight: 600; color: var(--ink);
+  background: var(--panel); border: 1px solid var(--line);
+  padding: 6px 11px; border-radius: 999px;
+}
+.chip.accent { border-color: rgba(10, 124, 110, 0.35); color: var(--accent); }
+
+.grid-2 { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 22px; align-items: start; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.panel {
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 16px; padding: 20px 22px;
+  backdrop-filter: blur(6px);
+}
+.panel h3 {
+  font-family: Syne, sans-serif; font-size: 15px; font-weight: 700;
+  margin-bottom: 8px;
+}
+.panel p, .panel li { font-size: 14px; color: var(--muted); }
+.panel ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.panel li { padding-left: 14px; position: relative; }
+.panel li::before {
+  content: ""; position: absolute; left: 0; top: 0.55em;
+  width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+}
+
+.phase-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+.phase-tab {
+  text-align: left; cursor: pointer; border: 1px solid var(--line);
+  background: var(--panel); border-radius: 14px; padding: 14px 16px;
+  font: inherit; transition: 0.2s ease;
+}
+.phase-tab .n { font-family: Syne, sans-serif; font-size: 20px; color: var(--accent); font-weight: 700; }
+.phase-tab .l { display: block; font-size: 13px; font-weight: 700; margin-top: 2px; }
+.phase-tab .s { display: block; font-size: 12px; color: var(--muted); margin-top: 4px; }
+.phase-tab.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(10, 124, 110, 0.12);
+  background: #fff;
+}
+.phase-detail { display: none; }
+.phase-detail.active { display: block; animation: rise 0.28s ease both; }
+
+.moment {
+  border-left: 3px solid var(--accent);
+  padding-left: 14px;
+}
+.moment .tag {
+  display: inline-block; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--accent-2); margin-bottom: 6px;
+}
+.ok { color: var(--ok); font-weight: 700; }
+.bad { color: var(--bad); font-weight: 700; }
+
+.tx-list { display: flex; flex-direction: column; gap: 8px; }
+.tx-list a {
+  display: flex; justify-content: space-between; gap: 12px; align-items: baseline;
+  text-decoration: none; color: inherit;
+  padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line);
+  background: rgba(255,255,255,0.55); transition: 0.15s ease;
+}
+.tx-list a:hover { border-color: var(--accent); background: #fff; }
+.tx-list .name { font-size: 13px; font-weight: 600; }
+.tx-list .hash { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.dx {
+  display: flex; flex-direction: column; gap: 10px; height: 100%;
+}
+.dx .sev {
+  align-self: flex-start; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 4px 8px; border-radius: 6px;
+  background: rgba(180, 83, 9, 0.12); color: var(--warn);
+}
+.dx .fix { font-size: 13px; color: var(--muted); }
+.dx .fix strong { color: var(--ink); }
+
+.footer-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 28px;
+  background: rgba(244, 247, 250, 0.92);
+  border-top: 1px solid var(--line);
+  font-size: 12px; color: var(--muted);
+  backdrop-filter: blur(8px);
+}
+.footer-bar kbd {
+  font: inherit; font-size: 11px; font-weight: 600;
+  border: 1px solid var(--line); border-bottom-width: 2px;
+  border-radius: 6px; padding: 2px 7px; background: #fff; color: var(--ink);
+}
+.nav-arrows { display: flex; gap: 8px; }
+.nav-arrows button {
+  border: 1px solid var(--line); background: #fff; color: var(--ink);
+  border-radius: 8px; padding: 6px 12px; cursor: pointer; font: inherit; font-size: 12px; font-weight: 600;
+}
+.nav-arrows button:hover { border-color: var(--accent); color: var(--accent); }
+
+@media (max-width: 820px) {
+  .grid-2, .grid-3, .phase-tabs { grid-template-columns: 1fr; }
+  nav { flex-direction: column; align-items: flex-start; }
+  .nav-links { justify-content: flex-start; }
+  h1 { max-width: none; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand">
+    <strong class="display">XRPL Private Credit Fund</strong>
+    <span>Track 2 Loaded · Hackathon pitch · Sep 2026</span>
+  </div>
+  <div class="nav-links" id="nav"></div>
+</nav>
+
+<main class="deck">
+
+  <!-- 1 -->
+  <section class="slide active" data-title="Title" id="s-title">
+    <div class="eyebrow">XRPL Lending Protocol Hackathon</div>
+    <h1>A permissioned <em>private credit fund</em> on XRPL</h1>
+    <p class="lead">The broker opens a closed-ended vault as one themed funding campaign — investors who pass on-chain KYC subscribe to that mandate, capital deploys via XLS-65/66, and share transfers stay inside the compliance ring. Verified on public Devnet.</p>
+    <div class="meta-row">
+      <span class="chip accent">Track 2 · Loaded</span>
+      <span class="chip">XLS-65 / 66 V1.1</span>
+      <span class="chip">Permissioned Domains + MPTs</span>
+      <span class="chip">xrpl.js@5.2.0-beta.1</span>
+    </div>
+    <div class="grid-2">
+      <div class="panel">
+        <h3>What we shipped</h3>
+        <ul>
+          <li>Script-driven prototype — one script per lifecycle step</li>
+          <li>Credential-gated vault deposits + MPT share transfers</li>
+          <li>Live Devnet explorer links for every major transaction</li>
+          <li>Structured DevEx findings with proposed fixes</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Example campaign</h3>
+        <p>Imagine the broker opens a vault dedicated to <strong>credit for quantum startups</strong>. Investors who want that theme subscribe to <em>this</em> vault; a later climate or biotech raise is a <em>new</em> vault with new dates. The theme is the mandate and underwriting story — on-chain, the vault enforces phases and credentials, not the borrower’s industry label.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide" data-title="Problem" id="s-problem">
+    <div class="eyebrow">The problem</div>
+    <h2 class="h2">Lending money to companies is still hard to trust and hard to exit</h2>
+    <p class="lead"><strong>Private credit</strong> means investors lend to companies outside the public stock market — often through a fund. That idea is fine. The plumbing is the problem.</p>
+    <div class="grid-3">
+      <div class="panel">
+        <h3>Who is allowed in?</h3>
+        <p>Today that answer often lives in emails and spreadsheets. You cannot easily <em>check on a shared system</em> whether someone is approved to invest. It depends on who you know.</p>
+      </div>
+      <div class="panel">
+        <h3>Your money is stuck</h3>
+        <p>Once you put capital in, you usually wait until the fund ends. Selling your piece early to another approved investor is difficult or impossible.</p>
+      </div>
+      <div class="panel">
+        <h3>Paperwork and bank wires</h3>
+        <p>Putting money in, paying interest, and getting money back still means bank transfers and back-office matching — slow, easy to disagree about, hard to verify.</p>
+      </div>
+    </div>
+    <div class="panel" style="margin-top: 14px;">
+      <h3>What we are <em>not</em> claiming</h3>
+      <p>We are not saying “anyone can invest.” Checks like KYC (know-your-customer identity checks) still matter. We want those rules to be <strong>visible and enforced on the ledger</strong>, not only in a private database.</p>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide" data-title="Solution" id="s-solution">
+    <div class="eyebrow">The solution</div>
+    <h2 class="h2">One vault = one themed funding campaign</h2>
+    <p class="lead">Broker picks a mandate (e.g. quantum credit), opens a closed-ended vault with a fixed calendar, and invites KYC’d LPs. Credentialed investors subscribe in XRP, hold MPT shares, and earn via Price Per Share. The loan is underwritten to that mandate — then settled on-ledger.</p>
+    <div class="grid-3">
+      <div class="panel">
+        <h3>1. On-chain KYC ring</h3>
+        <p>Permissioned Domain + Credentials. Uncredentialed deposits fail at the vault — <code>tecNO_AUTH</code>.</p>
+      </div>
+      <div class="panel">
+        <h3>2. Tradeable shares</h3>
+        <p>During locked Investment, credentialed holders can transfer MPTs. Unauthorized recipients are rejected.</p>
+      </div>
+      <div class="panel">
+        <h3>3. Verifiable yield</h3>
+        <p>PPS rises when cash enters without minting shares (coupon / repayment). Cash-basis V1.1 — no off-chain yield book.</p>
+      </div>
+    </div>
+    <div class="panel" style="margin-top: 14px;">
+      <h3>What the ledger does <em>not</em> store</h3>
+      <p>The industry theme is product narrative and broker underwriting. On-chain enforcement is phases, credentials, and share transfers — not a “quantum” tag on the borrower.</p>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="slide" data-title="Lifecycle" id="s-lifecycle">
+    <div class="eyebrow">How it works</div>
+    <h2 class="h2">Three protocol-enforced phases</h2>
+    <p class="lead">Wrong-phase transactions are rejected by the ledger. Click a phase (or use the demo scripts in order).</p>
+    <div class="phase-tabs" role="tablist">
+      <button class="phase-tab active" data-phase="sub" type="button">
+        <span class="n">01</span>
+        <span class="l">Subscription</span>
+        <span class="s">Capital in · shares minted</span>
+      </button>
+      <button class="phase-tab" data-phase="inv" type="button">
+        <span class="n">02</span>
+        <span class="l">Investment</span>
+        <span class="s">Loan · coupon · transfers</span>
+      </button>
+      <button class="phase-tab" data-phase="red" type="button">
+        <span class="n">03</span>
+        <span class="l">Redemption</span>
+        <span class="s">Withdraw · shares burned</span>
+      </button>
+    </div>
+    <div class="panel phase-detail active" id="phase-sub">
+      <h3>Subscription</h3>
+      <ul>
+        <li>Credentialed investors call <code>VaultDeposit</code>.</li>
+        <li>MPT shares mint at current PPS.</li>
+        <li>Uncredentialed attempts are rejected.</li>
+        <li>Deposits stop at <code>SubscriptionDate</code>.</li>
+      </ul>
+    </div>
+    <div class="panel phase-detail" id="phase-inv">
+      <h3>Investment</h3>
+      <ul>
+        <li>Deposits and withdrawals are locked.</li>
+        <li>Broker + borrower co-sign <code>LoanSet</code>; principal draws down.</li>
+        <li>Mid-term coupon via <code>tfVaultDonation</code>.</li>
+        <li>MPT transfers stay inside the KYC ring.</li>
+      </ul>
+    </div>
+    <div class="panel phase-detail" id="phase-red">
+      <h3>Redemption</h3>
+      <ul>
+        <li>Borrower repayment lands; PPS can rise (cash-basis).</li>
+        <li>After <code>RedemptionDate</code>, investors call <code>VaultWithdraw</code>.</li>
+        <li>MPT shares are burned.</li>
+        <li>XRP returns at current PPS.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide" data-title="Demo" id="s-demo">
+    <div class="eyebrow">Live demo arc</div>
+    <h2 class="h2">Four moments that prove Loaded</h2>
+    <p class="lead">Terminal scripts + Devnet explorer — no app server. ~4 minutes.</p>
+    <div class="grid-2">
+      <div class="panel moment">
+        <div class="tag">Scene 1 · Compliance gate</div>
+        <h3>Uncredentialed deposit rejected</h3>
+        <p><span class="bad">tecNO_AUTH</span> on <code>VaultDeposit</code> — domain gate live at vault create (<code>DomainID</code> + <code>tfVaultPrivate</code>).</p>
+      </div>
+      <div class="panel moment">
+        <div class="tag">Scene 2 · Lending</div>
+        <h3>Dual-signed LoanSet + drawdown</h3>
+        <p>Broker and borrower intent on-ledger. Cash-basis: PPS does not jump at origination.</p>
+      </div>
+      <div class="panel moment">
+        <div class="tag">Scene 3 · Perimeter</div>
+        <h3>MPT transfer A→B / reject uncredentialed</h3>
+        <p><span class="ok">tesSUCCESS</span> within ring · <span class="bad">tecNO_AUTH</span> outside — compliance at the token.</p>
+      </div>
+      <div class="panel moment">
+        <div class="tag">Scene 4 · Exit</div>
+        <h3>Redemption burns shares</h3>
+        <p>Both investors withdraw; share balances → 0. Explorer links in README.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide" data-title="On-chain" id="s-onchain">
+    <div class="eyebrow">Technical execution</div>
+    <h2 class="h2">Verified on public Devnet</h2>
+    <p class="lead">Representative hashes from the Phase C lifecycle run. Full table in README.</p>
+    <div class="grid-2">
+      <div class="tx-list">
+        <a href="https://devnet.xrpl.org/transactions/1899CC0430528EF94E0C745DDDB6C20E9A4EA91D5BD0B5FBB2466C946E8F7B87" target="_blank" rel="noopener">
+          <span class="name">VaultCreate (gated)</span><span class="hash">1899CC04…</span>
+        </a>
+        <a href="https://devnet.xrpl.org/transactions/DFDCCA5DD81A13449D60B9B23F94D512679A64A0BD35EBBB90F8DB82FE6CB6F2" target="_blank" rel="noopener">
+          <span class="name">Uncred deposit · tecNO_AUTH</span><span class="hash">DFDCCA5D…</span>
+        </a>
+        <a href="https://devnet.xrpl.org/transactions/A7E879A04EE4450396320CEAEDB80A965190C3A69DA04CCCD138676D0066A39D" target="_blank" rel="noopener">
+          <span class="name">LoanSet + drawdown</span><span class="hash">A7E879A0…</span>
+        </a>
+        <a href="https://devnet.xrpl.org/transactions/69BEF2F8BC61E738D228639AB11CC535C56D6F37E7A4D0CE6DCE6E7CCAC41C98" target="_blank" rel="noopener">
+          <span class="name">MPT transfer A→B</span><span class="hash">69BEF2F8…</span>
+        </a>
+        <a href="https://devnet.xrpl.org/transactions/B6C4442D8E19DE4D5919DF1C1C2620A340BB72154FA866DC08180A48E0ABE3CB" target="_blank" rel="noopener">
+          <span class="name">MPT → uncred · tecNO_AUTH</span><span class="hash">B6C4442D…</span>
+        </a>
+      </div>
+      <div class="panel">
+        <h3>Stack</h3>
+        <ul>
+          <li>Public XRPL Devnet</li>
+          <li>TypeScript scripts via <code>xrpl.js@5.2.0-beta.1</code></li>
+          <li>No API / no frontend product — ledger is the backend</li>
+          <li>Playbook: <code>TESTING.md</code> · findings: <code>docs/DEVEX_LOG.md</code></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide" data-title="DevEx" id="s-devex">
+    <div class="eyebrow">Developer feedback</div>
+    <h2 class="h2">Three frictions — with proposed fixes</h2>
+    <p class="lead">Drawn from the live build log. Full write-up in <code>docs/DEVEX_REPORT.md</code>.</p>
+    <div class="grid-3">
+      <div class="panel dx">
+        <span class="sev">High · SDK bug</span>
+        <h3>DX-06 · Wrong LoanSet counterparty prefix</h3>
+        <p class="fix"><code>signLoanSetByCounterparty</code> still uses STX signing after <code>fixCleanup3_4_0</code>. Needs CPT (<code>encodeForSigningCounterparty</code>). Blocks every dual-party loan on Devnet.</p>
+        <p class="fix"><strong>Fix:</strong> one-line SDK swap + tutorial note until patched.</p>
+      </div>
+      <div class="panel dx">
+        <span class="sev">High · API confusion</span>
+        <h3>DX-12 · GracePeriod is not “grace”</h3>
+        <p class="fix">Window is <code>[Due − Grace, Due)</code> — opens early, does not extend past deadline. Name implies the opposite → <code>tecEXPIRED</code> traps.</p>
+        <p class="fix"><strong>Fix:</strong> rename / diagram in XLS-66 docs; include deadline in error metadata.</p>
+      </div>
+      <div class="panel dx">
+        <span class="sev">High · Doc gap</span>
+        <h3>DX-08 · DomainID needs tfVaultPrivate</h3>
+        <p class="fix">Setting <code>DomainID</code> on <code>VaultCreate</code> without <code>tfVaultPrivate</code> fails — coupling undocumented. Wastes hours in Loaded setups.</p>
+        <p class="fix"><strong>Fix:</strong> document required flag pair; SDK validation hint when DomainID is set.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide" data-title="Close" id="s-close">
+    <div class="eyebrow">Closing</div>
+    <h2 class="h2">What we want you to remember</h2>
+    <div class="grid-2" style="margin-top: 8px;">
+    <div class="panel">
+      <h3>Product</h3>
+      <ul>
+        <li>Themed private credit campaigns — one vault, one mandate</li>
+        <li>Loaded for real: Domains + Credentials + MPT perimeter</li>
+        <li>End-to-end closed-ended lifecycle on Devnet</li>
+      </ul>
+    </div>
+      <div class="panel">
+        <h3>DevEx</h3>
+        <ul>
+          <li>Precise, reproducible findings with proposed fixes</li>
+          <li>Highest leverage: patch counterparty signing (DX-06)</li>
+          <li>Docs must catch up to V1.1 + Loaded coupling</li>
+        </ul>
+      </div>
+    </div>
+    <div class="panel" style="margin-top: 14px;">
+      <h3>Repo</h3>
+      <p style="margin-top: 6px;">Public GitHub · README with explorer links · <code>TESTING.md</code> · <code>docs/DEVEX_REPORT.md</code> · script runner only</p>
+      <p style="margin-top: 12px; font-size: 13px; color: var(--muted);">DeVinci Blockchain · XRPL Lending Protocol Hackathon 2026 · IIM Paris–La Défense</p>
+    </div>
+  </section>
+
+</main>
+
+<div class="footer-bar">
+  <div>Slide <span id="pos">1</span> / <span id="total">8</span> · <kbd>←</kbd> <kbd>→</kbd> to navigate</div>
+  <div class="nav-arrows">
+    <button type="button" id="prev">Previous</button>
+    <button type="button" id="next">Next</button>
+  </div>
+</div>
+
+<script>
+const slides = [...document.querySelectorAll('.slide')];
+const nav = document.getElementById('nav');
+let i = 0;
+
+slides.forEach((s, idx) => {
+  const btn = document.createElement('button');
+  btn.className = 'nav-btn' + (idx === 0 ? ' active' : '');
+  btn.type = 'button';
+  btn.textContent = s.dataset.title;
+  btn.addEventListener('click', () => go(idx));
+  nav.appendChild(btn);
+});
+
+const navBtns = () => [...nav.querySelectorAll('.nav-btn')];
+
+function go(n) {
+  i = (n + slides.length) % slides.length;
+  slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+  navBtns().forEach((b, idx) => b.classList.toggle('active', idx === i));
+  document.getElementById('pos').textContent = String(i + 1);
+}
+
+document.getElementById('total').textContent = String(slides.length);
+document.getElementById('prev').addEventListener('click', () => go(i - 1));
+document.getElementById('next').addEventListener('click', () => go(i + 1));
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+    e.preventDefault();
+    go(i + 1);
+  } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+    e.preventDefault();
+    go(i - 1);
+  }
+});
+
+document.querySelectorAll('.phase-tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.phase-tab').forEach((t) => t.classList.remove('active'));
+    document.querySelectorAll('.phase-detail').forEach((d) => d.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('phase-' + tab.dataset.phase).classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
