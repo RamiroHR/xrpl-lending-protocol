@@ -29,7 +29,7 @@ Severity scale: **Low** (minor inconvenience) · **Medium** (workaround required
 | [DX-12](#dx-12--graceperiod-in-loanset-opens-the-payment-window-before-nextpaymentdue-not-after) | `GracePeriod` in `LoanSet` opens payment window BEFORE `NextPaymentDue`, not after | API Confusion | High |
 | [DX-13](#dx-13--tfvaultdonation-flag-absent-from-xrpljs-sdk-ripple-binary-codec-and-published-docs) | `tfVaultDonation` flag absent from xrpl.js SDK, ripple-binary-codec, and published docs | DOC GAP / SDK FRICTION | High |
 | [DX-14](#dx-14--vaultdeposit-accepts-1-drop-amounts-no-minimum-deposit-enforced-at-protocol-level) | `VaultDeposit` accepts 1-drop amounts; no minimum deposit enforced at protocol level | DOC GAP | Low |
-| [DX-15](#dx-15--loansets-tecno_permission-fires-even-when-account-exactly-matches-the-loanbrokers-owner-field) | `LoanSet`'s `tecNO_PERMISSION` fires even when `Account` exactly matches the `LoanBroker`'s `Owner` field | Protocol Bug | High |
+| [DX-15](#dx-15--loansets-tecno_permission-fires-even-when-account-exactly-matches-the-loanbrokers-owner-field) | `LoanSet`'s `tecNO_PERMISSION` fires even when `Account` exactly matches the `LoanBroker`'s `Owner` field — ✅ Resolved (beta.1) | Protocol Bug | High |
 | [DX-16](#dx-16--vaultcreates-subscriptiondate-marks-the-end-of-the-subscription-window-not-the-start) | `VaultCreate`'s `SubscriptionDate` marks the end of the subscription window, not the start | API Confusion | Medium |
 | [DX-17](#dx-17--loansets-error-cases-table-on-xrplorg-omits-tectoo_soon-entirely) | `LoanSet`'s Error Cases table on xrpl.org omits `tecTOO_SOON` entirely | DOC GAP | Medium |
 | [DX-18](#dx-18--the-interaction-between-domainid-mpt-requireauth-and-mptokenauthorize-for-vault-shares-is-undocumented) | The interaction between `DomainID`, MPT `RequireAuth`, and `MPTokenAuthorize` for vault shares is undocumented | DOC GAP | Medium |
@@ -423,9 +423,11 @@ tecNO_AUTH
 
 This failure is *behaviorally correct* — uncredentialed accounts cannot hold shares — but the mechanism is indirect and the error code is misleading. `tecNO_AUTH` implies that explicit MPT authorization was required and denied; the real reason is that no `MPToken` object exists for the destination. A developer reading `tecNO_AUTH` in isolation would look for `lsfMPTRequireAuth` and not find it set, creating confusion.
 
-The implicit barrier also has a security gap: since `lsfMPTRequireAuth` is NOT set on the vault's share MPT (and cannot be set post-creation — see DX-09), an uncredentialed account *could* create their own `MPToken` entry by calling `MPTokenAuthorize` on their own behalf (this is permitted when `lsfMPTRequireAuth` is absent). If they did this, a subsequent `Payment` of shares would succeed — meaning the domain gate on deposits does not fully prevent uncredentialed accounts from holding shares via secondary transfer.
-
 This interaction between XLS-80 domain gating, XLS-65 share MPT management, and XLS-33 MPToken entry creation is undocumented in any of the three spec documents.
+
+**Correction (2026-09-13, verified on-chain against the current beta.1 production vault):** The original write-up of this finding assumed `lsfMPTRequireAuth` is NOT set on the vault's share MPT — reasoning from DX-09 that the broker's inability to set it via `MPTokenIssuanceSet` meant it was never set at all — and concluded that an uncredentialed account could self-`MPTokenAuthorize` and then successfully receive shares via `Payment`. A direct `ledger_entry` check on the production vault's share MPT (`ShareMPTID` `00000001B9C0FA9FE5722D32F299FDB7952DDA1C20F479BD`, itself `DomainID`-scoped and private) shows `Flags: 60` — `lsfMPTRequireAuth` **is** set. This matches DX-18, which reaches the same result independently.
+
+This is not a beta.0-vs-beta.1 or public-vs-private discrepancy: both write-ups describe the same kind of vault (private, `DomainID`-scoped) on the same library version (beta.1). DX-10's premise was simply never checked directly against the ledger. With `lsfMPTRequireAuth` confirmed set, DX-18's fuller investigation (self-`MPTokenAuthorize` succeeds for *any* account regardless of credential — no check at that step — but the Permissioned Domain credential is checked specifically at `Payment`/receive time) shows the "security gap" originally described below does not actually hold: an uncredentialed account can self-opt-in, but a subsequent `Payment` of shares to them still fails with `tecNO_AUTH`. The domain gate is intact end-to-end; see DX-18 for the confirmed mechanism.
 
 ### Reproduction
 
@@ -443,15 +445,17 @@ const payTx = {
 };
 // → tecNO_AUTH (no MPToken entry for destination)
 // 5. Uncredentialed calls MPTokenAuthorize on their own behalf
-//    (possible because lsfMPTRequireAuth is NOT set — see DX-09)
-// → MPToken entry created; subsequent Payment would succeed
+//    (succeeds regardless of credential — self opt-in has no credential check)
+// 6. Uncredentialed retries the Payment above → still tecNO_AUTH (see DX-18: the
+//    Permissioned Domain credential is checked at Payment/receive time, not at
+//    opt-in time — lsfMPTRequireAuth being set does not change this outcome)
 ```
 
 ### Proposed fix
 
-1. **XLS-65 doc — VaultCreate:** Document that vault-managed share MPTs do not have `lsfMPTRequireAuth` set; secondary transfers to accounts without an `MPToken` entry fail with `tecNO_AUTH`. Explain that the domain gate applies only at deposit time.
-2. **XLS-65 security guidance:** Add a warning that credential-gated vaults (`DomainID` set) may still permit uncredentialed accounts to self-create MPToken entries and receive shares via secondary transfer. If strict share-holder whitelisting is required, use `tfVaultShareNonTransferable` at VaultCreate time, then model transfer eligibility at the application layer.
-3. **XLS-33 error message:** `tecNO_AUTH` when `lsfMPTRequireAuth` is not set should clarify whether the rejection was due to a missing authorization flag or a missing MPToken entry object.
+1. **XLS-65 doc — VaultCreate:** Document that `DomainID` auto-sets `lsfMPTRequireAuth` on the vault-managed share MPT (see DX-18), and that secondary transfers to accounts without an `MPToken` entry fail with `tecNO_AUTH` regardless of that flag.
+2. **XLS-33 / Permissioned Domains docs:** Document that self-`MPTokenAuthorize` succeeds for any account when the MPT carries a `DomainID` (no credential check at opt-in time), but the credential is checked when shares are actually received via `Payment` — so the domain gate remains intact end-to-end (see DX-18).
+3. **`tecNO_AUTH` error message:** Clarify whether the rejection is due to (a) no `MPToken` entry existing yet for the destination, or (b) the destination's credential failing the domain check at receive time — these are currently indistinguishable from the error alone.
 
 ---
 
@@ -592,34 +596,38 @@ In typical DeFi protocols, dust deposits (amounts below a practical threshold) a
 ## DX-15 — `LoanSet`'s `tecNO_PERMISSION` fires even when `Account` exactly matches the `LoanBroker`'s `Owner` field
 
 **Category:** Protocol Bug
-**Severity:** High
-**Library:** `xrpl.js@5.2.0-beta.0` · rippled Devnet (XLS-66 V1.1)
-**Date:** 2026-09-12
+**Status:** ✅ Resolved after the beta.1 upgrade — see Resolution below
+**Severity:** High (as observed on beta.0)
+**Library:** `xrpl.js@5.2.0-beta.0` (found) → confirmed fixed on `xrpl.js@5.2.0-beta.1`
+**Date:** 2026-09-12 (found) · 2026-09-13 (re-verified fixed)
 
 ### Description
 
-Once a closed-ended vault's `SubscriptionDate` has passed (see DX-17 for the preceding `tecTOO_SOON` gate), submitting `LoanSet` against a `LoanBroker` created by the same wallet is rejected with `tecNO_PERMISSION` — even when `Account` is an exact match for the `LoanBroker`'s `Owner` field. Fetching the `LoanBroker` ledger entry via `ledger_entry` confirms two distinct address fields: `Account` (the broker's own auto-generated pseudo-account) and `Owner` (the broker wallet that created it, matching `LoanSet`'s `Account` exactly). Per xrpl.org, `tecNO_PERMISSION` on `LoanSet` should only fire when "neither the transaction sender's `Account` or the `Counterparty` field owns the associated `LoanBroker`" — that condition does not hold here.
+Once a closed-ended vault's `SubscriptionDate` had passed (see DX-17 for the preceding `tecTOO_SOON` gate), submitting `LoanSet` against a `LoanBroker` created by the same wallet was rejected with `tecNO_PERMISSION` on `xrpl.js@5.2.0-beta.0` — even when `Account` was an exact match for the `LoanBroker`'s `Owner` field. Fetching the `LoanBroker` ledger entry via `ledger_entry` confirmed two distinct address fields: `Account` (the broker's own auto-generated pseudo-account) and `Owner` (the broker wallet that created it, matching `LoanSet`'s `Account` exactly). Per xrpl.org, `tecNO_PERMISSION` on `LoanSet` should only fire when "neither the transaction sender's `Account` or the `Counterparty` field owns the associated `LoanBroker`" — that condition did not hold, yet the transaction was still rejected.
 
-Vault liquidity, vault privacy (public and Permissioned-Domain-scoped vaults both reproduce it), `LoanBroker` age (waited up to 2.5 minutes), and malformed-transaction fields (verified via `tx`) were all ruled out in turn. A direct `feature` query confirmed `LendingProtocolV1_1` is `enabled: true` and `supported: true` on the connected Devnet, ruling out an amendment-not-active explanation. The failure reproduces identically on both a throwaway diagnostic vault and a permanent Phase B vault, so it is not an artifact of one vault instance. Root cause remains unresolved — most likely the permission check is comparing against the `LoanBroker`'s pseudo-`Account` rather than its `Owner`, but this has not been confirmed against rippled source.
+Vault liquidity, vault privacy (public and Permissioned-Domain-scoped vaults both reproduced it), `LoanBroker` age (waited up to 2.5 minutes), and malformed-transaction fields (verified via `tx`) were all ruled out in turn. A direct `feature` query confirmed `LendingProtocolV1_1` was `enabled: true` and `supported: true` on the connected Devnet, ruling out an amendment-not-active explanation. The failure reproduced identically on both a throwaway diagnostic vault and a permanent Phase B vault, so it was not an artifact of one vault instance.
 
-**Note:** Not yet re-verified against `xrpl.js@5.2.0-beta.1` / the organizer's Devnet update (see DX-06) — retest before assuming this still blocks the current build.
+### Resolution (verified 2026-09-13)
 
-### Reproduction
+Re-checked directly on-chain against the production `LoanSet` transaction referenced in the README (`A7E879A0…`, [explorer](https://devnet.xrpl.org/transactions/A7E879A04EE4450396320CEAEDB80A965190C3A69DA04CCCD138676D0066A39D)), submitted on `xrpl.js@5.2.0-beta.1`: `meta.TransactionResult` is `tesSUCCESS`, and the affected `LoanBroker` node's `Owner` (`rETJRQgLu5Fw7onujGPvHrPsQ7kVWJ282i`) is an exact match for the `LoanSet`'s `Account` — precisely the scenario that previously returned `tecNO_PERMISSION` on beta.0. The bug is resolved as of the organizer's beta.1 upgrade. Whether the fix landed in `xrpl.js`, `ripple-binary-codec`, or the `LendingProtocolV1_1` rippled implementation itself was not isolated, since all three moved together in that update.
+
+### Reproduction (historical — beta.0 only, kept as a regression test)
 
 ```
 1. Create a closed-ended vault with SubscriptionDate ~20s in the future.
 2. LoanBrokerSet from broker wallet W → tesSUCCESS.
 3. VaultDeposit funds the vault (rules out liquidity as the cause).
-4. Before SubscriptionDate: LoanSet { Account: W, ... } → tecTOO_SOON (expected, see DX-05).
-5. After SubscriptionDate: LoanSet { Account: W, ... } → tecNO_PERMISSION,
+4. Before SubscriptionDate: LoanSet { Account: W, ... } → tecTOO_SOON (expected, see DX-17).
+5. After SubscriptionDate: LoanSet { Account: W, ... } → tecNO_PERMISSION on beta.0,
    even though ledger_entry on the LoanBroker shows Owner === W exactly.
+   → tesSUCCESS on beta.1 for the same Account === Owner scenario (see Resolution above).
 ```
 
-### Proposed fix
+### Proposed fix (historical — no longer actionable, kept for traceability)
 
-1. **Fix the permission check.** If the `LendingProtocol` amendment's `tecNO_PERMISSION` logic on `LoanSet` is comparing against the `LoanBroker`'s pseudo-`Account` instead of its `Owner`, correct it so a sender matching `Owner` is accepted, per the documented rule.
-2. **Or fix the docs.** If the check is intentionally stricter than documented, update the `LoanSet` reference page to state the real condition being tested, since the current wording ("neither `Account` nor `Counterparty` owns the associated `LoanBroker`") does not match observed behavior.
-3. **Improve the error.** A `tec`-class code specific to this check (or metadata naming which ownership comparison failed) would let developers rule out "wrong field" vs. "genuine bug" without needing a direct `ledger_entry` + `feature` investigation.
+1. **Fix the permission check.** If the `LendingProtocol` amendment's `tecNO_PERMISSION` logic on `LoanSet` was comparing against the `LoanBroker`'s pseudo-`Account` instead of its `Owner`, this is what needed correcting — consistent with the observed fix.
+2. **Or fix the docs.** Not needed: behavior now matches the documented rule.
+3. **Improve the error.** Still a valid general suggestion for any future `tec`-class regression on this check: name which ownership comparison failed in the error metadata.
 
 ---
 
@@ -694,7 +702,7 @@ Testing whether Single Asset Vault shares (an MPT under the hood) can be gated b
 
 None of this — the automatic `RequireAuth`, the self-authorize requirement, or the credential check happening at receive-time rather than opt-in-time — is documented on the `VaultCreate`, `MPTokenIssuanceSet`, `MPTokenAuthorize`, or Permissioned Domains reference pages.
 
-**Note:** Partially conflicts with DX-10, which found `lsfMPTRequireAuth` NOT set on this project's vault shares. Confirm whether this is a per-vault/per-track difference or a regression before treating both findings as simultaneously accurate.
+**Reconciled with DX-10 (2026-09-13):** Verified directly against the current beta.1 production vault via `ledger_entry` — its share MPT (`DomainID`-scoped, private vault, `ShareMPTID` `00000001B9C0FA9FE5722D32F299FDB7952DDA1C20F479BD`) shows `Flags: 60`, confirming `lsfMPTRequireAuth` **is** set, matching this finding. DX-10 has been corrected accordingly: its `MPToken`-entry-requirement point (contributing to `tecNO_AUTH`) stands, but its "security gap" conclusion did not hold once the domain-credential check at `Payment`/receive time (point 3 above) is accounted for.
 
 ### Reproduction
 
