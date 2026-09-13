@@ -2,8 +2,13 @@
  * B4 — Borrower repayment.
  *
  * Reads LOAN_ID, LOAN_NEXT_PAYMENT_DUE, LOAN_PERIODIC_PAYMENT from .env
- * (written by 05_investment.ts) and polls until the payment is due before
- * submitting. Logs vault AssetsTotal and PPS before/after as cash-basis proof.
+ * (written by 05_investment.ts) and polls until 30s before the payment
+ * deadline before submitting. Logs vault AssetsTotal and PPS before/after.
+ *
+ * XLS-66 GracePeriod semantics (DX-12): NextPaymentDue IS the deadline.
+ * GracePeriod defines how early the payment can be made: window is
+ * [NextPaymentDue - GracePeriod, NextPaymentDue). Submitting AFTER
+ * NextPaymentDue returns tecEXPIRED even if GracePeriod is large.
  *
  * Cash-basis note (XLS-66 V1.1): PPS does NOT change when the loan is
  * originated — only when the repayment cash arrives. This is by design but
@@ -14,6 +19,7 @@ import { withClient } from '../config/client';
 import { loadAccounts } from '../config/accounts';
 import {
   rippleTimeToISO,
+  xrplTimeNow,
   assertSuccess,
   waitForPhase,
   fetchVaultInfo,
@@ -22,6 +28,10 @@ import {
 } from '../config/xrpl-utils';
 
 dotenv.config();
+
+// Submit this many seconds BEFORE the payment deadline to allow ledger inclusion.
+// Must be ≤ GracePeriod (set to 30s; GracePeriod = 300s so this is safe).
+const SUBMISSION_LEAD_TIME = 30;
 
 function requireEnv(key: string): string {
   const v = process.env[key];
@@ -32,22 +42,32 @@ function requireEnv(key: string): string {
 async function main(): Promise<void> {
   console.log('=== B4: Borrower Repayment ===\n');
 
-  const vaultId       = requireEnv('VAULT_ID');
-  const loanId        = requireEnv('LOAN_ID');
-  const nextDue       = Number(requireEnv('LOAN_NEXT_PAYMENT_DUE'));
+  const vaultId         = requireEnv('VAULT_ID');
+  const loanId          = requireEnv('LOAN_ID');
+  const nextDue         = Number(requireEnv('LOAN_NEXT_PAYMENT_DUE'));
   const periodicPayment = requireEnv('LOAN_PERIODIC_PAYMENT');
-  const { borrower }  = loadAccounts();
+  const { borrower }    = loadAccounts();
 
   console.log(`VaultID         : ${vaultId}`);
   console.log(`LoanID          : ${loanId}`);
   console.log(`Borrower        : ${borrower.classicAddress}`);
-  console.log(`NextPaymentDue  : ${rippleTimeToISO(nextDue)}`);
+  console.log(`Deadline        : ${rippleTimeToISO(nextDue)}  (NextPaymentDue — payment must land BEFORE this)`);
   console.log(`PeriodicPayment : ${periodicPayment} drops (${Number(periodicPayment) / 1e6} XRP)\n`);
+
+  // Early exit: if the payment deadline has already passed, there is nothing to do.
+  const startTime = xrplTimeNow();
+  if (startTime >= nextDue) {
+    console.error(`Payment window expired: now ${rippleTimeToISO(startTime)} >= deadline ${rippleTimeToISO(nextDue)}.`);
+    console.error(`Re-run from b0 (b0 → b1 → b2 → b3 → b4).`);
+    process.exit(1);
+  }
 
   await withClient(async (client) => {
 
-    // ── Wait for payment due ──────────────────────────────────────────────
-    await waitForPhase(client, nextDue, 'payment due date');
+    // ── Wait until SUBMISSION_LEAD_TIME seconds before the deadline ────────
+    // GracePeriod (300s) opens the window: [NextPaymentDue - 300, NextPaymentDue).
+    // We target NextPaymentDue - 30s to ensure the tx is included before the deadline.
+    await waitForPhase(client, nextDue - SUBMISSION_LEAD_TIME, 'payment submission window');
 
     // ── PPS snapshot BEFORE repayment ─────────────────────────────────────
     const vaultBefore = await fetchVaultInfo(client, vaultId);

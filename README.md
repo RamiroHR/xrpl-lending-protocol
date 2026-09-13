@@ -21,6 +21,8 @@ The fund lifecycle maps onto the three phases of a closed-ended vault:
 | **Investment** | Deposits and withdrawals are blocked. The broker originates a loan and the borrower draws down. *(Loaded: mid-term coupon via `tfVaultDonation`; share transfers within the KYC ring.)* |
 | **Redemption** | Borrower repays; investors withdraw principal (plus yield when coupons / interest are demonstrated); MPT shares are burned. |
 
+How the KYC credential gate works (trust chain, dual-signature model, MPT auth): [`docs/CREDENTIAL_GATE.md`](docs/CREDENTIAL_GATE.md)
+
 ### Implementation status
 
 **Done (Track 2 minimum bar — Phase B)**

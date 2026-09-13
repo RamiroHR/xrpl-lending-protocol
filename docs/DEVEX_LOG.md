@@ -23,6 +23,7 @@ Severity scale: **Low** (minor inconvenience) · **Medium** (workaround required
 | [DX-09](#dx-09--mptokenisuanceset-with-tfmptseterequireauth-returns-tecno_permission-on-vault-share-mpts) | `MPTokenIssuanceSet` with `tfMPTSetRequireAuth` returns `tecNO_PERMISSION` on vault share MPTs | API Confusion | High |
 | [DX-10](#dx-10--vaultdeposit-domain-gate-creates-implicit-mpt-transfer-barrier-via-mptoken-entry-requirement) | `VaultDeposit` domain gate creates implicit MPT transfer barrier via MPToken entry requirement | DOC GAP | Medium |
 | [DX-11](#dx-11--credentialcreate-is-not-idempotent-re-running-c1-setup-fails-with-tecduplicate) | `CredentialCreate` is not idempotent — re-running setup fails with `tecDUPLICATE` | API Confusion | Medium |
+| [DX-12](#dx-12--graceperiod-in-loanset-opens-the-payment-window-before-nextpaymentdue-not-after) | `GracePeriod` in `LoanSet` opens payment window BEFORE `NextPaymentDue`, not after | API Confusion | High |
 
 ---
 
@@ -475,5 +476,53 @@ CredentialCreate { Issuer: broker, Subject: investorA, CredentialType: '4B59435F
 1. **XLS-70 tutorial / CredentialCreate docs:** Add a note that `CredentialCreate` is NOT idempotent; provide the idempotency check pattern (query `account_objects { type: 'credential' }` before submitting).
 2. **Error message improvement:** `tecDUPLICATE` in the `CredentialCreate` context should say "A credential with this (Issuer, Subject, CredentialType) already exists" to make the cause immediately clear.
 3. **SDK helper:** Consider an `upsertCredential` pattern in xrpl.js that handles the check-and-skip logic, similar to how `autofill` handles sequence numbers automatically.
+
+---
+
+## DX-12 — `GracePeriod` in `LoanSet` opens the payment window BEFORE `NextPaymentDue`, not after
+
+**Category:** API Confusion
+**Severity:** High
+**Library:** `xrpl.js@5.2.0-beta.1` · rippled Devnet (XLS-66 V1.1)
+**Date:** 2026-09-13
+
+### Description
+
+`NextPaymentDue` in the `Loan` ledger object is the **deadline** — the payment must be validated in a ledger whose `close_time ≤ NextPaymentDue`. `GracePeriod` does not extend the window past the deadline; it defines how early the payment can be made. The payment window is:
+
+```
+[NextPaymentDue - GracePeriod,  NextPaymentDue)
+```
+
+With `GracePeriod = PaymentInterval = 300s` (as in this prototype), this means the payment window opens immediately at loan creation (`StartDate`) and closes exactly 300 seconds later at `NextPaymentDue`. Submitting even 3 seconds after `NextPaymentDue` returns `tecEXPIRED`.
+
+The counterintuitive part: "GracePeriod" conventionally means a post-deadline extension (e.g. a 30-day grace period on a monthly invoice). In XLS-66 it means the opposite — a pre-deadline window. A developer who reads the field name and assumes the payment can be made "up to GracePeriod seconds after the due date" will write a repayment script that always fails.
+
+**Observed failure:** LoanPay validated at `NextPaymentDue + 3s` → `tecEXPIRED`. Grace period was 300s.
+
+### Reproduction
+
+```typescript
+// LoanSet with GracePeriod = 300, PaymentInterval = 300
+// NextPaymentDue = StartDate + 300
+
+// Submit LoanPay 3 seconds after NextPaymentDue
+// → tecEXPIRED (tx hash: CB58FE571CBAC0D552CD12DEA9B29F78ADFD9A4489ECD8E5423F7183780F2E36)
+```
+
+### Workaround (applied in this prototype)
+
+In `08_repayment.ts`: target `NextPaymentDue - SUBMISSION_LEAD_TIME` (30s) instead of `NextPaymentDue`. Also add an upfront guard that aborts if `xrplTimeNow() >= NextPaymentDue`.
+
+```typescript
+const SUBMISSION_LEAD_TIME = 30; // submit 30s before deadline
+// ...
+await waitForPhase(client, nextDue - SUBMISSION_LEAD_TIME, 'payment submission window');
+```
+
+### Proposed fix
+
+1. **XLS-66 spec / `LoanSet` docs:** Rename the field or add a prominent callout clarifying that `GracePeriod` defines the window opening time relative to `NextPaymentDue`, not an extension after it. A diagram showing `[NextPaymentDue - GracePeriod, NextPaymentDue)` would eliminate the confusion.
+2. **Error improvement:** `tecEXPIRED` on `LoanPay` should include the payment deadline and submission time in the error metadata so developers can immediately see they were late rather than having to compute epoch offsets manually.
 
 ---
