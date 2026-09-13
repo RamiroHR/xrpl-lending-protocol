@@ -50,17 +50,22 @@ async function main(): Promise<void> {
     console.log('⚠️  Run 04_subscription.ts NOW — subscription window closes in 2 minutes.');
     console.log('⚠️  Run 05_investment.ts within 30 minutes (before redemption opens).\n');
 
+    // tfVaultPrivate (0x10000) is required when DomainID is set; omitting it returns
+    // "Cannot set DomainID unless tfVaultPrivate flag is set" (DevEx finding DX-08).
+    const vaultFlags = DOMAIN_ID ? 0x10000 : 0;
+
     const vaultTx = {
       TransactionType: 'VaultCreate',
       Account: broker.classicAddress,
       Asset: { currency: 'XRP' },
       WithdrawalPolicy: 1,
-      Flags: 0,
+      Flags: vaultFlags,
       VaultKind: 1,
       SubscriptionDate: subDate,
       RedemptionDate: redemptionDate,
-      // C1: attach Permissioned Domain if set; gates VaultDeposit to credentialed accounts
-      ...(DOMAIN_ID ? { PermissionedDomainID: DOMAIN_ID } : {}),
+      // C1: attach Permissioned Domain if set; gates VaultDeposit to credentialed accounts.
+      // Field name in beta.1 codec is DomainID (not PermissionedDomainID — DevEx finding DX-07).
+      ...(DOMAIN_ID ? { DomainID: DOMAIN_ID } : {}),
     };
 
     console.log('Submitting VaultCreate...');

@@ -15,7 +15,9 @@
     "b3": "tsx scripts/05_investment.ts",
     "b4": "tsx scripts/08_repayment.ts",
     "b5": "tsx scripts/09_redemption.ts",
-    "c1": "tsx scripts/03_permissioned_domain.ts"
+    "c1": "tsx scripts/03_permissioned_domain.ts",
+    "c2": "tsx scripts/03b_mpt_auth.ts",
+    "c4": "tsx scripts/07_mpt_transfer.ts"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
