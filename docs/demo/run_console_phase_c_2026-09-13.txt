@@ -1,0 +1,434 @@
+# Phase C full Devnet run — raw console output (tracked copy for the pitch / repo)
+# Date: 2026-09-13 (local ~05:xx CEST / wall-clock vault phases in UTC)
+# Sequence: c1 → b0 → b1 → b2 → b3 → b4 → c2 → c4 → b5
+# Used by: pitch.html “Demo” slide (excerpts are embedded; this file is the full log)
+# Note: original live worksheet lived under docs/sprints/ (gitignored); this path is committed.
+
+================================================================================
+$ npm run c1
+================================================================================
+
+> xrpl-lending-protocol@0.1.0 c1
+> tsx scripts/03_permissioned_domain.ts
+
+=== C1: Permissioned Domain + Credential Issuance ===
+
+Broker    : rETJRQgLu5Fw7onujGPvHrPsQ7kVWJ282i
+InvestorA : r9xWSZ1RZUzM65F4WsL3zRZL5LMVhskrzG
+InvestorB : rLHvsr9uosbw2b4RHdYU6fgWLJf2BKiv1T
+CredType  : KYC_VERIFIED  (hex: 4B59435F5645524946494544)
+
+--- Step 1: PermissionedDomainSet ---
+  ℹ️  DOMAIN_ID already in .env and exists on-chain — reusing
+    DOMAIN_ID : CE2BC85376404029F8857B51F8D9828F0C6FB15CD4676C5ED960E7AEAAAA9CEB
+
+--- Step 2: CredentialCreate → InvestorA ---
+  ℹ️  Credential already exists (ID: 013B1EFF537EFCEBC563FECABD2CD51A4BF3208C670193B3F07D706A5F47F527) — skipping create
+
+--- Step 3: CredentialAccept — InvestorA ---
+  ℹ️  Already accepted — skipping
+
+--- Step 4: CredentialCreate → InvestorB ---
+  ℹ️  Credential already exists (ID: 47FA622482A964E3DA60EDE5780B3AF905378724B743431690A3DB760592B592) — skipping create
+
+--- Step 5: CredentialAccept — InvestorB ---
+  ℹ️  Already accepted — skipping
+
+--- Step 6: On-chain verification ---
+  InvestorA credential ID : 013B1EFF537EFCEBC563FECABD2CD51A4BF3208C670193B3F07D706A5F47F527
+  InvestorB credential ID : 47FA622482A964E3DA60EDE5780B3AF905378724B743431690A3DB760592B592
+  Uncredentialed cred     : none (expected)
+
+  Explorer — Broker     : https://devnet.xrpl.org/accounts/rETJRQgLu5Fw7onujGPvHrPsQ7kVWJ282i
+  Explorer — InvestorA  : https://devnet.xrpl.org/accounts/r9xWSZ1RZUzM65F4WsL3zRZL5LMVhskrzG
+  Explorer — InvestorB  : https://devnet.xrpl.org/accounts/rLHvsr9uosbw2b4RHdYU6fgWLJf2BKiv1T
+
+Writing to .env...
+  .env ← DOMAIN_ID=CE2BC85376404029F8857B51F8D9828F0C6FB15CD4676C5ED960E7AEAAAA9CEB
+  .env ← CREDENTIAL_TYPE=4B59435F5645524946494544
+  .env ← CREDENTIAL_ISSUER=rETJRQgLu5Fw7onujGPvHrPsQ7kVWJ282i
+
+✅ C1 COMPLETE — domain created, credentials issued and accepted
+   DOMAIN_ID and CREDENTIAL_TYPE written to .env
+   Uncredentialed account has NO credential (as expected)
+
+================================================================================
+$ npm run b0
+================================================================================
+
+> xrpl-lending-protocol@0.1.0 b0
+> tsx scripts/00b_fund_accounts.ts
+
+=== B0: Fund All Accounts ===
+
+Balances BEFORE:
+  InvestorA  r9xWSZ1RZUzM65F4WsL3zRZL5LMVhskrzG  65.00 XRP
+  InvestorB  rLHvsr9uosbw2b4RHdYU6fgWLJf2BKiv1T  635.00 XRP
+  Borrower   rHMCXx15jGM99x14Kmgmy4Z23u42usgz1E  730.00 XRP
+  Broker     rETJRQgLu5Fw7onujGPvHrPsQ7kVWJ282i  698.00 XRP
+
+Requesting faucet funds...
+  ✓ InvestorA  +100 XRP
+  ✓ InvestorB  +100 XRP
+  ✓ Borrower   +100 XRP
+  ✓ Broker     +100 XRP
+
+Balances AFTER:
+  InvestorA  r9xWSZ1RZUzM65F4WsL3zRZL5LMVhskrzG  165.00 XRP
+  InvestorB  rLHvsr9uosbw2b4RHdYU6fgWLJf2BKiv1T  735.00 XRP
+  Borrower   rHMCXx15jGM99x14Kmgmy4Z23u42usgz1E  830.00 XRP
+  Broker     rETJRQgLu5Fw7onujGPvHrPsQ7kVWJ282i  798.00 XRP
+
+✅ B0 COMPLETE — accounts funded, ready for B1→B5
+
+================================================================================
+$ npm run b1
+================================================================================
+
+> xrpl-lending-protocol@0.1.0 b1
+> tsx scripts/02_create_vault.ts
+
+=== B1: Create Production Vault ===
+
+Broker: rETJRQgLu5Fw7onujGPvHrPsQ7kVWJ282i
+
+Phase boundaries (wall-clock):
+  Subscription ends  : 2026-09-13T03:26:00.000Z  (in 120s)
+  Redemption opens   : 2026-09-13T03:39:00.000Z  (in 900s)
+  PermissionedDomain : CE2BC85376404029F8857B51F8D9828F0C6FB15CD4676C5ED960E7AEAAAA9CEB  (credential-gated deposits)
+
+⚠️  Run 04_subscription.ts NOW — subscription window closes in 2 minutes.
+⚠️  Run 05_investment.ts within 30 minutes (before redemption opens).
+
+Submitting VaultCreate...
+
+VaultCreate SUCCESS
+  VaultID : A3BBD1CE0D8E207C7ED1EFA0A4C823F89D6C8EDDC9DC68D922193004E79FB130
+  Hash    : 1899CC0430528EF94E0C745DDDB6C20E9A4EA91D5BD0B5FBB2466C946E8F7B87
+  Explorer: https://devnet.xrpl.org/transactions/1899CC0430528EF94E0C745DDDB6C20E9A4EA91D5BD0B5FBB2466C946E8F7B87
+
+Writing to .env...
+  .env ← VAULT_ID=A3BBD1CE0D8E207C7ED1EFA0A4C823F89D6C8EDDC9DC68D922193004E79FB130
+  .env ← VAULT_SUB_DATE=842585160
+  .env ← VAULT_REDEMPTION_DATE=842585940
+
+✅ B1 COMPLETE — vault created, .env updated
+
+================================================================================
+$ npm run b2
+================================================================================
+
+> xrpl-lending-protocol@0.1.0 b2
+> tsx scripts/04_subscription.ts
+
+=== B2: Subscription Deposits ===
+
+VaultID  : A3BBD1CE0D8E207C7ED1EFA0A4C823F89D6C8EDDC9DC68D922193004E79FB130
+InvestorA: r9xWSZ1RZUzM65F4WsL3zRZL5LMVhskrzG
+InvestorB: rLHvsr9uosbw2b4RHdYU6fgWLJf2BKiv1T
+Uncred   : rQG5yfgE77LoEThN3ZEFKMqgrDKHT4Z5x2
+Sub ends : 2026-09-13T03:26:00.000Z
+
+--- C3: Uncredentialed VaultDeposit probe (expect rejection) ---
+  ✓ Uncred deposit REJECTED (expected): tecNO_AUTH
+    Hash    : DFDCCA5DD81A13449D60B9B23F94D512679A64A0BD35EBBB90F8DB82FE6CB6F2
+    Explorer: https://devnet.xrpl.org/transactions/DFDCCA5DD81A13449D60B9B23F94D512679A64A0BD35EBBB90F8DB82FE6CB6F2
+    Full meta: {
+  "AffectedNodes": [
+    {
+      "ModifiedNode": {
+        "FinalFields": {
+          "Account": "rQG5yfgE77LoEThN3ZEFKMqgrDKHT4Z5x2",
+          "Balance": "99999998",
+          "Flags": 0,
+          "OwnerCount": 0,
+          "Sequence": 5260937
+        },
+        "LedgerEntryType": "AccountRoot",
+        "LedgerIndex": "B1CE4587C36A02AED71A9E75A1E09FDF0605439EE0E6E7D53AB206C003D97D49",
+        "PreviousFields": {
+          "Balance": "99999999",
+          "Sequence": 5260936
+        },
+        "PreviousTxnID": "2D4CE08B2FFD10BF6BCFE8E7F2ED5A37B8ACC7AB3CE8DF3866B72176B129E089",
+        "PreviousTxnLgrSeq": 5268676
+      }
+    }
+  ],
+  "TransactionIndex": 0,
+  "TransactionResult": "tecNO_AUTH"
+}
+
+Depositing 50 XRP from InvestorA...
+  ✓ InvestorA deposit OK — hash: B2AF328C5307EA99C222E63EA292899503713A770D64E28516E510C61E946794
+    Explorer: https://devnet.xrpl.org/transactions/B2AF328C5307EA99C222E63EA292899503713A770D64E28516E510C61E946794
+  AssetsTotal after A  : 50 XRP
+  InvestorA shares     : 50000000 (50 XRP equiv)
+
+Depositing 30 XRP from InvestorB...
+  ✓ InvestorB deposit OK — hash: D8E73B0884CCDAD0A5292CBDDAD5BB6DCE40138DEBAD9751B173CD1902AFC762
+    Explorer: https://devnet.xrpl.org/transactions/D8E73B0884CCDAD0A5292CBDDAD5BB6DCE40138DEBAD9751B173CD1902AFC762
+  AssetsTotal after B  : 80 XRP
+  InvestorB shares     : 30000000 (30 XRP equiv)
+
+Over-subscription probe: attempting 500 XRP deposit from InvestorA...
+  Over-sub REJECTED: tecINSUFFICIENT_FUNDS (full response below)
+   {
+  "AffectedNodes": [
+    {
+      "ModifiedNode": {
+        "FinalFields": {
+          "Account": "r9xWSZ1RZUzM65F4WsL3zRZL5LMVhskrzG",
+          "Balance": "114999979",
+          "Flags": 0,
+          "OwnerCount": 10,
+          "Sequence": 5260951
+        },
+        "LedgerEntryType": "AccountRoot",
+        "LedgerIndex": "690BA0E406FEA84D68740E63F7342E55A4765917F8157B936031615637E000AE",
+        "PreviousFields": {
+          "Balance": "114999980",
+          "Sequence": 5260950
+        },
+        "PreviousTxnID": "B2AF328C5307EA99C222E63EA292899503713A770D64E28516E510C61E946794",
+        "PreviousTxnLgrSeq": 5269235
+      }
+    }
+  ],
+  "TransactionIndex": 2,
+  "TransactionResult": "tecINSUFFICIENT_FUNDS"
+}
+
+Final vault state:
+  AssetsTotal    : 80 XRP
+  AssetsAvailable: 80 XRP
+  ShareMPTID     : 00000001B9C0FA9FE5722D32F299FDB7952DDA1C20F479BD
+
+✅ B2 COMPLETE — subscriptions done
+
+================================================================================
+$ npm run b3
+================================================================================
+
+> xrpl-lending-protocol@0.1.0 b3
+> tsx scripts/05_investment.ts
+
+=== B3: Investment — LoanBrokerSet + LoanSet + Drawdown ===
+
+VaultID : A3BBD1CE0D8E207C7ED1EFA0A4C823F89D6C8EDDC9DC68D922193004E79FB130
+Broker  : rETJRQgLu5Fw7onujGPvHrPsQ7kVWJ282i
+Borrower: rHMCXx15jGM99x14Kmgmy4Z23u42usgz1E
+Sub end : 2026-09-13T03:26:00.000Z
+
+Waiting for investment phase (subscription closed)  (target: 2026-09-13T03:26:00.000Z,  ~48s on ledger clock)
+  investment phase (subscription closed) OPEN — proceeding
+
+Submitting LoanBrokerSet...
+  ✓ LoanBrokerSet OK — LoanBrokerID: 75547ABFDB773581A8251984371B843F768F2E7C3B2CCF3C3A7C6CC1D12603E2
+    Explorer: https://devnet.xrpl.org/transactions/54CCE89D211CBD2291DA155A243A4E13F292C56A2FE039351495FE863DEBD4F1
+
+Building LoanSet (dual-sign: broker + borrower)...
+  Step 1: autofill...
+For LoanSet transaction the auto calculated Fee accounts for total number of signers the counterparty has to avoid transaction failure.
+  Step 2: broker signs...
+  Step 3: borrower counter-signs (CPT\0 prefix)...
+  Step 4: submit...
+
+  ✓ LoanSet SUCCESS — dual-sign confirmed
+    LoanID  : C9F5162128A800CC1B4516F32BAD69CD55A86CCB2BDDBFC7FB6F6DFE4F999D67
+    Hash    : A7E879A04EE4450396320CEAEDB80A965190C3A69DA04CCCD138676D0066A39D
+    Explorer: https://devnet.xrpl.org/transactions/A7E879A04EE4450396320CEAEDB80A965190C3A69DA04CCCD138676D0066A39D
+
+  ✓ Drawdown: 10 XRP automatically transferred to borrower
+
+Fetching Loan ledger entry...
+  NextPaymentDueDate : 842585473  (2026-09-13T03:31:13.000Z)
+  PeriodicPayment    : 10000004.75647865356 drops  (10.000004756478654 XRP)
+  PaymentRemaining   : 1
+
+  .env ← LOAN_ID=C9F5162128A800CC1B4516F32BAD69CD55A86CCB2BDDBFC7FB6F6DFE4F999D67
+  .env ← LOAN_NEXT_PAYMENT_DUE=842585473
+  .env ← LOAN_PERIODIC_PAYMENT=10000004.75647865356
+✅ B3 COMPLETE — loan originated and on-chain
+
+================================================================================
+$ npm run b4
+================================================================================
+
+> xrpl-lending-protocol@0.1.0 b4
+> tsx scripts/08_repayment.ts
+
+=== B4: Borrower Repayment ===
+
+VaultID         : A3BBD1CE0D8E207C7ED1EFA0A4C823F89D6C8EDDC9DC68D922193004E79FB130
+LoanID          : C9F5162128A800CC1B4516F32BAD69CD55A86CCB2BDDBFC7FB6F6DFE4F999D67
+Borrower        : rHMCXx15jGM99x14Kmgmy4Z23u42usgz1E
+Deadline        : 2026-09-13T03:31:13.000Z  (NextPaymentDue — payment must land BEFORE this)
+PeriodicPayment : 10000004.75647865356 drops (10.000004756478654 XRP)
+
+Waiting for payment submission window  (target: 2026-09-13T03:30:43.000Z,  ~258s on ledger clock)
+  payment submission window OPEN — proceeding
+
+Vault state BEFORE repayment:
+  AssetsTotal : 80 XRP
+  TotalShares : 80000000
+  PPS         : 1.000000000 XRP/share
+
+Submitting LoanPay (10.000005 XRP = 10000005 drops)...
+  ✓ LoanPay SUCCESS
+    Hash    : 04BFE0BBA65B8F21A26CF4DAEC513007B63F6B37339BC5C2EEBC2790590DE618
+    Explorer: https://devnet.xrpl.org/transactions/04BFE0BBA65B8F21A26CF4DAEC513007B63F6B37339BC5C2EEBC2790590DE618
+
+Vault state AFTER repayment:
+  AssetsTotal : 80.000005 XRP
+  TotalShares : 80000000
+  PPS         : 1.000000063 XRP/share
+
+  PPS Δ = 0.000000063 XRP/share
+  ℹ️  PPS delta is near-zero — expected for a 2-minute loan at 5% annual (DX-01).
+     Interest accrued ≈ 10 XRP × 0.005 × 120s/31536000s ≈ 0 drops.
+     Use tfVaultDonation (06_coupon_injection.ts) to simulate observable yield.
+
+✅ B4 COMPLETE — loan repaid, cash-basis PPS captured
+
+================================================================================
+$ npm run c2
+================================================================================
+
+> xrpl-lending-protocol@0.1.0 c2
+> tsx scripts/03b_mpt_auth.ts
+
+=== C2: MPT Authorization (lsfMPTRequireAuth + authorize A/B) ===
+
+VaultID   : A3BBD1CE0D8E207C7ED1EFA0A4C823F89D6C8EDDC9DC68D922193004E79FB130
+Broker    : rETJRQgLu5Fw7onujGPvHrPsQ7kVWJ282i
+InvestorA : r9xWSZ1RZUzM65F4WsL3zRZL5LMVhskrzG
+InvestorB : rLHvsr9uosbw2b4RHdYU6fgWLJf2BKiv1T
+Uncred    : rQG5yfgE77LoEThN3ZEFKMqgrDKHT4Z5x2
+
+ShareMPTID: 00000001B9C0FA9FE5722D32F299FDB7952DDA1C20F479BD
+
+--- Step 1: MPTokenIssuanceSet (tfMPTSetRequireAuth) ---
+  ℹ️  Known limitation (DX-09): vault-managed MPTs return tecNO_PERMISSION.
+  ⚠️  MPTokenIssuanceSet result: tecNO_PERMISSION (DX-09 confirmed)
+     Hash    : E13224ED6A76A49087A42B1883DF3D009AE3A85C364E22CDA273EBDE20F5EF59
+     Vault owns share MPT exclusively; broker cannot set RequireAuth post-creation.
+     Transfers A→B/uncred will rely on MPToken entry presence (see DX-10).
+
+--- Steps 2–3 skipped: lsfMPTRequireAuth not set (DX-09) ---
+  Share transfers will be gated by MPToken entry presence instead (DX-10).
+
+--- Step 4: Uncredentialed account status ---
+  Uncredentialed (rQG5yfgE77LoEThN3ZEFKMqgrDKHT4Z5x2):
+  → No MPToken entry (no VaultDeposit ever made). Transfers will fail with tecNO_AUTH (DX-10).
+
+  .env ← SHARE_MPT_ID=00000001B9C0FA9FE5722D32F299FDB7952DDA1C20F479BD
+✅ C2 COMPLETE — lsfMPTRequireAuth blocked by DX-09; transfer barrier via MPToken entry (DX-10)
+
+================================================================================
+$ npm run c4
+================================================================================
+
+> xrpl-lending-protocol@0.1.0 c4
+> tsx scripts/07_mpt_transfer.ts
+
+=== C4: MPT Share Transfer Tests ===
+
+VaultID   : A3BBD1CE0D8E207C7ED1EFA0A4C823F89D6C8EDDC9DC68D922193004E79FB130
+InvestorA : r9xWSZ1RZUzM65F4WsL3zRZL5LMVhskrzG
+InvestorB : rLHvsr9uosbw2b4RHdYU6fgWLJf2BKiv1T
+Uncred    : rQG5yfgE77LoEThN3ZEFKMqgrDKHT4Z5x2
+
+ShareMPTID: 00000001B9C0FA9FE5722D32F299FDB7952DDA1C20F479BD
+
+Shares before transfer:
+  InvestorA : 50000000
+  InvestorB : 30000000
+
+--- Transfer 1: InvestorA → InvestorB (25000000 shares / half) ---
+  ✓ Transfer A→B SUCCESS
+    Hash    : 69BEF2F8BC61E738D228639AB11CC535C56D6F37E7A4D0CE6DCE6E7CCAC41C98
+    Explorer: https://devnet.xrpl.org/transactions/69BEF2F8BC61E738D228639AB11CC535C56D6F37E7A4D0CE6DCE6E7CCAC41C98
+
+--- Transfer 2: InvestorA → Uncredentialed (1000000 shares — expect rejection) ---
+  ✓ Uncred transfer REJECTED (expected): tecNO_AUTH
+    Hash    : B6C4442D8E19DE4D5919DF1C1C2620A340BB72154FA866DC08180A48E0ABE3CB
+    Explorer: https://devnet.xrpl.org/transactions/B6C4442D8E19DE4D5919DF1C1C2620A340BB72154FA866DC08180A48E0ABE3CB
+    Full meta: {
+  "AffectedNodes": [
+    {
+      "ModifiedNode": {
+        "FinalFields": {
+          "Account": "r9xWSZ1RZUzM65F4WsL3zRZL5LMVhskrzG",
+          "Balance": "114999977",
+          "Flags": 0,
+          "OwnerCount": 10,
+          "Sequence": 5260953
+        },
+        "LedgerEntryType": "AccountRoot",
+        "LedgerIndex": "690BA0E406FEA84D68740E63F7342E55A4765917F8157B936031615637E000AE",
+        "PreviousFields": {
+          "Balance": "114999978",
+          "Sequence": 5260952
+        },
+        "PreviousTxnID": "69BEF2F8BC61E738D228639AB11CC535C56D6F37E7A4D0CE6DCE6E7CCAC41C98",
+        "PreviousTxnLgrSeq": 5269374
+      }
+    }
+  ],
+  "TransactionIndex": 1,
+  "TransactionResult": "tecNO_AUTH"
+}
+
+Final share balances:
+  InvestorA    : 25000000
+  InvestorB    : 55000000
+  Uncredentialed: 0
+
+✅ C4 COMPLETE — MPT transfer test done
+
+================================================================================
+$ npm run b5
+================================================================================
+
+> xrpl-lending-protocol@0.1.0 b5
+> tsx scripts/09_redemption.ts
+
+=== B5: Redemption — VaultWithdraw A + B ===
+
+VaultID    : A3BBD1CE0D8E207C7ED1EFA0A4C823F89D6C8EDDC9DC68D922193004E79FB130
+InvestorA  : r9xWSZ1RZUzM65F4WsL3zRZL5LMVhskrzG
+InvestorB  : rLHvsr9uosbw2b4RHdYU6fgWLJf2BKiv1T
+Redemption : 2026-09-13T03:39:00.000Z
+
+Waiting for redemption phase  (target: 2026-09-13T03:39:00.000Z,  ~399s on ledger clock)
+  redemption phase OPEN — proceeding
+
+Vault state at redemption:
+  AssetsTotal    : 80.000005 XRP
+  AssetsAvailable: 80.000005 XRP
+  TotalShares    : 80000000
+  PPS            : 1.000000063 XRP/share
+
+  InvestorA shares: 25000000
+  InvestorB shares: 55000000
+
+Withdrawing 25.000001 XRP for InvestorA...
+  ✓ InvestorA withdrawal OK
+    Hash    : 0122EDDE15ED00E5717128A80B50896B8B7F23413BA2E119827488DC5065F175
+    Explorer: https://devnet.xrpl.org/transactions/0122EDDE15ED00E5717128A80B50896B8B7F23413BA2E119827488DC5065F175
+    Shares remaining: 1  (expect 0)
+
+Withdrawing 55.000002 XRP for InvestorB (remaining)...
+  ✓ InvestorB withdrawal OK
+    Hash    : BA84662D4B2C9ED8E9EB9688893547211308A86BABA807D4594FB868BA6CEB74
+    Explorer: https://devnet.xrpl.org/transactions/BA84662D4B2C9ED8E9EB9688893547211308A86BABA807D4594FB868BA6CEB74
+    Shares remaining: 1  (expect 0)
+
+━━━ Yield summary ━━━
+  InvestorA: deposited 50 XRP → received 25.000001 XRP
+             yield = -24.999999 XRP  (-49.999998%)
+  InvestorB: deposited 30 XRP → received 55.000002 XRP
+             yield = 25.000002 XRP  (83.333340%)
+
+✅ B5 COMPLETE — full B1→B5 lifecycle finished

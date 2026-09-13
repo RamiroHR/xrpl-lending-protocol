@@ -49,7 +49,7 @@ How the KYC credential gate works (trust chain, dual-signature model, MPT auth):
 
 - [x] Coupon injection probe (`VaultDeposit` + `tfVaultDonation`) — PPS before/after, DX-13 probe (`d1`)
 - [x] Phase-gate rejection demos — 3+ verbatim rejection codes captured (`d2`)
-- [x] DevEx feedback report — submission copy at [`DEVEX_FEEDBACK.md`](DEVEX_FEEDBACK.md) (full draft [`docs/DEVEX_REPORT.md`](docs/DEVEX_REPORT.md); log [`docs/DEVEX_LOG.md`](docs/DEVEX_LOG.md))
+- [x] DevEx feedback report — submission copy at [`DEVEX_FEEDBACK.md`](DEVEX_FEEDBACK.md); structured log [`docs/DEVEX_LOG.md`](docs/DEVEX_LOG.md)
 - [x] On-chain transactions table filled with Devnet explorer links
 
 Run and verify the done path: [`TESTING.md`](TESTING.md).
@@ -152,8 +152,9 @@ root/
 ├── DEVEX_FEEDBACK.md  — manual DevEx report (repo root, for submission)
 ├── docs/DEVEX_LOG.md  — structured issue catalog (DX-01…)
 ├── docs/              — product docs, pitch script, longer drafts
+├── docs/demo/         — recorded Devnet console for pitch (tracked)
 ├── scripts/           — TypeScript flow scripts (one per lifecycle step)
-├── pitch.html         — HTML pitch deck
+├── pitch.html         — project presentation / demo slides (drag into a browser)
 ├── TESTING.md         — how to verify the build on Devnet
 ├── .env.example       — account seed/address template (copy to .env — never commit .env)
 └── README.md
@@ -168,23 +169,21 @@ The hackathon asks for two complementary DevEx deliverables. In this repo they a
 | Deliverable | File | What it is |
 |---|---|---|
 | **Manual feedback report** (repo root) | [`DEVEX_FEEDBACK.md`](DEVEX_FEEDBACK.md) | Short narrative: track / flavour / environment / library at the top; answers the Track 2 “Feedback to capture” questions from our live Devnet runs; each answer includes a proposed fix |
-| **Structured issue log** | [`docs/DEVEX_LOG.md`](docs/DEVEX_LOG.md) | One entry per finding in the format required by the brief: **category**, **title**, **description**, **repro steps or tx/code link**, **severity**, **library + version**, **proposed fix**. Indexed as DX-01 … DX-14 |
+| **Structured issue log** | [`docs/DEVEX_LOG.md`](docs/DEVEX_LOG.md) | One entry per finding in the format required by the brief: **category**, **title**, **description**, **repro steps or tx/code link**, **severity**, **library + version**, **proposed fix**. Indexed as DX-01 … DX-18 |
 
 We also ran the automated **XRPL DevEx hook** locally (invite `BFT-PARIS-26`).
 
-Optional longer draft (not the submission copy): [`docs/DEVEX_REPORT.md`](docs/DEVEX_REPORT.md).
-
 ---
 
-## Pitch deck
+## Pitch deck / demo slides
 
-HTML pitch (≤10 sections, keyboard ← →): open [`pitch.html`](pitch.html) in a browser.
+[`pitch.html`](pitch.html) is the project presentation: product story, recorded lifecycle demo (clickable terminal traces), on-chain proof, and DevEx highlights. No build step.
 
-**Speaker script & demo narration** (what to say, timing, explorer cues): [`docs/PITCH_SCRIPT.md`](docs/PITCH_SCRIPT.md).
+**How to open it:** drag `pitch.html` from the repo folder and drop it onto a browser window (or into a new tab). Then use ← → / Space to move between slides.
 
 ---
 
 ## Team
 
-**quant-lending** — Ramiro Rodriguez, Boris Danailov  
+**quant-lending** · Ramiro Rodriguez, Boris Danailov  
 XRPL Lending Protocol Hackathon 2026 · DeVinci Blockchain / Ripple · IIM Paris–La Défense

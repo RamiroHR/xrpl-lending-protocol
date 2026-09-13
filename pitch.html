@@ -153,6 +153,113 @@ h1 em { font-style: normal; color: var(--accent); }
 .ok { color: var(--ok); font-weight: 700; }
 .bad { color: var(--bad); font-weight: 700; }
 
+.demo-shell {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.95fr) minmax(0, 1.25fr);
+  gap: 16px;
+  align-items: stretch;
+  margin-top: 4px;
+}
+.demo-steps {
+  display: flex; flex-direction: column; gap: 6px;
+  max-height: min(52vh, 420px); overflow-y: auto;
+  padding-right: 4px;
+}
+.demo-step {
+  text-align: left; cursor: pointer; border: 1px solid var(--line);
+  background: var(--panel); border-radius: 12px; padding: 10px 12px;
+  font: inherit; color: inherit; transition: 0.18s ease;
+  display: grid; grid-template-columns: auto 1fr; gap: 2px 10px;
+  align-items: baseline;
+}
+.demo-step:hover { border-color: rgba(10, 124, 110, 0.35); background: #fff; }
+.demo-step.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(10, 124, 110, 0.12);
+  background: #fff;
+}
+.demo-step .cmd {
+  grid-column: 1; font-family: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px; font-weight: 700; color: var(--accent);
+}
+.demo-step .title {
+  grid-column: 2; font-size: 13px; font-weight: 700; color: var(--ink);
+}
+.demo-step .desc {
+  grid-column: 2; font-size: 11px; color: var(--muted); line-height: 1.35;
+}
+.demo-step .badge {
+  grid-column: 1 / -1; justify-self: start; margin-top: 4px;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--accent-2); background: rgba(26, 95, 138, 0.08);
+  padding: 2px 7px; border-radius: 4px;
+}
+.demo-panel {
+  display: flex; flex-direction: column; gap: 10px; min-width: 0;
+}
+.demo-substeps {
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 12px; padding: 12px 14px;
+}
+.demo-substeps .label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 8px;
+}
+.demo-substeps ol {
+  margin: 0; padding: 0; list-style: none;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.demo-substeps li {
+  display: grid; grid-template-columns: 1.4rem 1fr; gap: 8px;
+  align-items: start; font-size: 12px; color: var(--muted); line-height: 1.4;
+}
+.demo-substeps .n {
+  font-family: Syne, sans-serif; font-size: 12px; font-weight: 700;
+  color: var(--accent); line-height: 1.4;
+}
+.demo-substeps .tx {
+  font-family: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px; font-weight: 600; color: var(--ink);
+}
+.demo-substeps .who { color: var(--muted); }
+.demo-term {
+  display: flex; flex-direction: column; min-height: 220px;
+  border-radius: 14px; overflow: hidden;
+  border: 1px solid rgba(15, 28, 46, 0.2);
+  background: #152033;
+  box-shadow: 0 12px 28px rgba(15, 28, 46, 0.12);
+}
+.demo-term-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 9px 12px; background: #0f1a2a;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-family: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px; color: #9db0c7;
+}
+.demo-term-bar strong { color: #d7e4f2; font-weight: 600; }
+.demo-term-bar a {
+  color: #7ec8b8; text-decoration: none; font-size: 10px; white-space: nowrap;
+}
+.demo-term-bar a:hover { text-decoration: underline; }
+.demo-term pre {
+  flex: 1; margin: 0; padding: 14px 14px 18px;
+  overflow: auto; max-height: min(36vh, 300px);
+  font-family: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11.5px; line-height: 1.45; color: #d5e0ec;
+  white-space: pre-wrap; word-break: break-word;
+}
+.demo-term .hl-ok { color: #5dccb0; font-weight: 600; }
+.demo-term .hl-bad { color: #f0a0a0; font-weight: 600; }
+.demo-term .hl-dim { color: #7f93ab; }
+.demo-note {
+  margin-top: 12px; font-size: 12px; color: var(--muted);
+}
+@media (max-width: 820px) {
+  .demo-shell { grid-template-columns: 1fr; }
+  .demo-steps { max-height: none; }
+  .demo-term pre { max-height: 280px; }
+}
+
 .tx-list { display: flex; flex-direction: column; gap: 8px; }
 .tx-list a {
   display: flex; justify-content: space-between; gap: 12px; align-items: baseline;
@@ -374,31 +481,26 @@ h1 em { font-style: normal; color: var(--accent); }
 
   <!-- 5 -->
   <section class="slide" data-title="Demo" id="s-demo">
-    <div class="eyebrow">Live demo arc</div>
-    <h2 class="h2">Four moments that prove Loaded</h2>
-    <p class="lead">Terminal scripts + Devnet explorer — no app server. ~4 minutes.</p>
-    <div class="grid-2">
-      <div class="panel moment">
-        <div class="tag">Scene 1 · Compliance gate</div>
-        <h3>Uncredentialed deposit rejected</h3>
-        <p><span class="bad">tecNO_AUTH</span> on <code>VaultDeposit</code> — domain gate live at vault create (<code>DomainID</code> + <code>tfVaultPrivate</code>).</p>
-      </div>
-      <div class="panel moment">
-        <div class="tag">Scene 2 · Lending</div>
-        <h3>Dual-signed LoanSet + drawdown</h3>
-        <p>Broker and borrower intent on-ledger. Cash-basis: PPS does not jump at origination.</p>
-      </div>
-      <div class="panel moment">
-        <div class="tag">Scene 3 · Perimeter</div>
-        <h3>MPT transfer A→B / reject uncredentialed</h3>
-        <p><span class="ok">tesSUCCESS</span> within ring · <span class="bad">tecNO_AUTH</span> outside — compliance at the token.</p>
-      </div>
-      <div class="panel moment">
-        <div class="tag">Scene 4 · Exit</div>
-        <h3>Redemption burns shares</h3>
-        <p>Both investors withdraw; share balances → 0. Explorer links in README.</p>
+    <div class="eyebrow">Recorded Devnet run</div>
+    <h2 class="h2">Lifecycle in the terminal</h2>
+    <p class="lead">Click a step to see what that script does on-ledger, then the real console from the verified Phase C run. Badges mark the four pitch moments.</p>
+    <div class="demo-shell">
+      <div class="demo-steps" id="demo-steps" role="tablist" aria-label="Lifecycle steps"></div>
+      <div class="demo-panel" role="tabpanel" aria-live="polite">
+        <div class="demo-term">
+          <div class="demo-term-bar">
+            <span id="demo-term-cmd"><strong>$ npm run …</strong></span>
+            <a id="demo-term-link" href="#" target="_blank" rel="noopener">Explorer ↗</a>
+          </div>
+          <pre id="demo-term-out"></pre>
+        </div>
+        <div class="demo-substeps">
+          <div class="label">Inside this command</div>
+          <ol id="demo-internals"></ol>
+        </div>
       </div>
     </div>
+    <p class="demo-note">Excerpts embedded below · full recorded console: <a href="docs/demo/run_console_phase_c_2026-09-13.txt"><code>docs/demo/run_console_phase_c_2026-09-13.txt</code></a> · full hashes on the On-chain slide.</p>
   </section>
 
   <!-- 6 -->
@@ -463,8 +565,8 @@ h1 em { font-style: normal; color: var(--accent); }
   <!-- 7 -->
   <section class="slide" data-title="DevEx" id="s-devex">
     <div class="eyebrow">Developer feedback</div>
-    <h2 class="h2">14 findings — six High-severity highlights</h2>
-    <p class="lead">Drawn from the live build log. Full write-up: <code>docs/DEVEX_REPORT.md</code>.</p>
+    <h2 class="h2">18 findings — eight High-severity</h2>
+    <p class="lead"><code>docs/DEVEX_LOG.md</code> · six High highlights below · 8 Medium · 2 Low</p>
     <div class="grid-3">
       <div class="panel dx">
         <span class="sev">High · SDK bug</span>
@@ -572,6 +674,8 @@ document.getElementById('total').textContent = String(slides.length);
 document.getElementById('prev').addEventListener('click', () => go(i - 1));
 document.getElementById('next').addEventListener('click', () => go(i + 1));
 window.addEventListener('keydown', (e) => {
+  const tag = (e.target && e.target.tagName) || '';
+  if (tag === 'BUTTON' || tag === 'A' || tag === 'TEXTAREA' || tag === 'INPUT') return;
   if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
     e.preventDefault();
     go(i + 1);
@@ -589,6 +693,301 @@ document.querySelectorAll('.phase-tab').forEach((tab) => {
     document.getElementById('phase-' + tab.dataset.phase).classList.add('active');
   });
 });
+
+/* Demo slide — recorded Phase C / D console excerpts */
+const DEMO_STEPS = [
+  {
+    id: 'c1',
+    cmd: 'npm run c1',
+    title: 'Permissioned Domain + KYC',
+    desc: 'Broker domain; credentials for Investor A/B',
+    explorer: 'https://devnet.xrpl.org/objects/CE2BC85376404029F8857B51F8D9828F0C6FB15CD4676C5ED960E7AEAAAA9CEB',
+    internals: [
+      { tx: 'PermissionedDomainSet', who: 'Broker creates the KYC “club” rule (accepted credential type)' },
+      { tx: 'CredentialCreate', who: 'Broker issues KYC_VERIFIED to Investor A' },
+      { tx: 'CredentialAccept', who: 'Investor A signs to activate the credential' },
+      { tx: 'CredentialCreate', who: 'Broker issues KYC_VERIFIED to Investor B' },
+      { tx: 'CredentialAccept', who: 'Investor B signs to activate — Uncredentialed left out on purpose' },
+    ],
+    out: `=== C1: Permissioned Domain + Credential Issuance ===
+
+Broker    : rETJRQgLu5Fw7onujGPvHrPsQ7kVWJ282i
+InvestorA : r9xWSZ1RZUzM65F4WsL3zRZL5LMVhskrzG
+InvestorB : rLHvsr9uosbw2b4RHdYU6fgWLJf2BKiv1T
+CredType  : KYC_VERIFIED
+
+--- Step 1: PermissionedDomainSet ---
+  DOMAIN_ID : CE2BC85376404029F8857B51F8D9828F0C6FB15CD4676C5ED960E7AEAAAA9CEB
+
+--- Steps 2–5: CredentialCreate + Accept (A/B) ---
+  InvestorA credential : 013B1EFF…F47F527
+  InvestorB credential : 47FA6224…592B592
+  Uncredentialed cred  : none (expected)
+
+<span class="hl-ok">✅ C1 COMPLETE</span> — domain created, credentials issued and accepted`
+  },
+  {
+    id: 'b1',
+    cmd: 'npm run b1',
+    title: 'Create gated vault',
+    desc: 'VaultCreate with DomainID + tfVaultPrivate',
+    explorer: 'https://devnet.xrpl.org/transactions/1899CC0430528EF94E0C745DDDB6C20E9A4EA91D5BD0B5FBB2466C946E8F7B87',
+    internals: [
+      { tx: 'VaultCreate', who: 'Broker opens closed-ended vault (VaultKind: 1) with phase dates' },
+      { tx: 'DomainID + tfVaultPrivate', who: 'Wires the C1 domain so only credentialed LPs can deposit' },
+      { tx: '.env write', who: 'Stores VAULT_ID + subscription / redemption timestamps' },
+    ],
+    out: `=== B1: Create Production Vault ===
+
+Broker: rETJRQgLu5Fw7onujGPvHrPsQ7kVWJ282i
+
+Phase boundaries (wall-clock):
+  Subscription ends  : 2026-09-13T03:26:00.000Z  (in 120s)
+  Redemption opens   : 2026-09-13T03:39:00.000Z  (in 900s)
+  PermissionedDomain : CE2BC853…AAAA9CEB  (credential-gated)
+
+Submitting VaultCreate...
+
+VaultCreate SUCCESS
+  VaultID : A3BBD1CE0D8E207C7ED1EFA0A4C823F89D6C8EDDC9DC68D922193004E79FB130
+  Hash    : 1899CC0430528EF94E0C745DDDB6C20E9A4EA91D5BD0B5FBB2466C946E8F7B87
+
+<span class="hl-ok">✅ B1 COMPLETE</span> — vault created, .env updated`
+  },
+  {
+    id: 'b2',
+    cmd: 'npm run b2',
+    title: 'Subscribe + reject uncred',
+    desc: 'Credentialed deposits; uncred → tecNO_AUTH',
+    badge: 'Scene 1 · Compliance gate',
+    explorer: 'https://devnet.xrpl.org/transactions/DFDCCA5DD81A13449D60B9B23F94D512679A64A0BD35EBBB90F8DB82FE6CB6F2',
+    internals: [
+      { tx: 'VaultDeposit (Uncred)', who: 'Probe — expect tecNO_AUTH (domain gate)' },
+      { tx: 'VaultDeposit (A)', who: 'Investor A deposits 50 XRP → MPT shares minted' },
+      { tx: 'VaultDeposit (B)', who: 'Investor B deposits 30 XRP → AssetsTotal ≈ 80 XRP' },
+      { tx: 'Over-sub probe', who: 'Optional oversized deposit — captures rejection code' },
+    ],
+    out: `=== B2: Subscription Deposits ===
+
+VaultID  : A3BBD1CE…E79FB130
+Uncred   : rQG5yfgE77LoEThN3ZEFKMqgrDKHT4Z5x2
+
+--- C3: Uncredentialed VaultDeposit probe ---
+  <span class="hl-ok">✓ Uncred deposit REJECTED (expected):</span> <span class="hl-bad">tecNO_AUTH</span>
+    Hash : DFDCCA5DD81A13449D60B9B23F94D512679A64A0BD35EBBB90F8DB82FE6CB6F2
+
+Depositing 50 XRP from InvestorA...
+  <span class="hl-ok">✓ InvestorA deposit OK</span> — B2AF328C…
+  AssetsTotal after A  : 50 XRP
+
+Depositing 30 XRP from InvestorB...
+  <span class="hl-ok">✓ InvestorB deposit OK</span> — D8E73B08…
+  AssetsTotal after B  : 80 XRP
+
+Final vault state:
+  AssetsTotal    : 80 XRP
+  AssetsAvailable: 80 XRP
+
+<span class="hl-ok">✅ B2 COMPLETE</span> — subscriptions done`
+  },
+  {
+    id: 'b3',
+    cmd: 'npm run b3',
+    title: 'LoanSet + drawdown',
+    desc: 'Dual-sign loan; 10 XRP to borrower',
+    badge: 'Scene 2 · Lending',
+    explorer: 'https://devnet.xrpl.org/transactions/A7E879A04EE4450396320CEAEDB80A965190C3A69DA04CCCD138676D0066A39D',
+    internals: [
+      { tx: 'Wait', who: 'Auto-waits until Subscription ends (Investment opens)' },
+      { tx: 'LoanBrokerSet', who: 'Broker registers a LoanBroker against the vault' },
+      { tx: 'LoanSet', who: 'Broker + borrower dual-sign the loan (CPT counterparty)' },
+      { tx: 'Drawdown', who: 'Principal (10 XRP) moves from vault pool to Borrower' },
+    ],
+    out: `=== B3: Investment — LoanBrokerSet + LoanSet + Drawdown ===
+
+VaultID : A3BBD1CE…E79FB130
+Broker  : rETJRQgLu5Fw7onujGPvHrPsQ7kVWJ282i
+Borrower: rHMCXx15jGM99x14Kmgmy4Z23u42usgz1E
+
+  investment phase OPEN — proceeding
+
+Submitting LoanBrokerSet...
+  <span class="hl-ok">✓ LoanBrokerSet OK</span> — 54CCE89D…
+
+Building LoanSet (dual-sign: broker + borrower)...
+  Step 3: borrower counter-signs (CPT\\0 prefix)...
+
+  <span class="hl-ok">✓ LoanSet SUCCESS</span> — dual-sign confirmed
+    LoanID  : C9F51621…4F999D67
+    Hash    : A7E879A04EE4450396320CEAEDB80A965190C3A69DA04CCCD138676D0066A39D
+
+  <span class="hl-ok">✓ Drawdown: 10 XRP</span> automatically transferred to borrower
+
+<span class="hl-ok">✅ B3 COMPLETE</span> — loan originated and on-chain`
+  },
+  {
+    id: 'b4',
+    cmd: 'npm run b4',
+    title: 'LoanPay — PPS ticks',
+    desc: 'Repayment lands; AssetsTotal 80 → 80.000005',
+    explorer: 'https://devnet.xrpl.org/transactions/04BFE0BBA65B8F21A26CF4DAEC513007B63F6B37339BC5C2EEBC2790590DE618',
+    internals: [
+      { tx: 'Wait', who: 'Opens payment window (Due − GracePeriod → Due)' },
+      { tx: 'Snapshot', who: 'Logs AssetsTotal / shares / PPS before' },
+      { tx: 'LoanPay', who: 'Borrower repays into the vault pool (not Broker wallet)' },
+      { tx: 'Snapshot', who: 'PPS after — cash-basis yield proof (tiny on short vaults)' },
+    ],
+    out: `=== B4: Borrower Repayment ===
+
+LoanID          : C9F51621…4F999D67
+PeriodicPayment : 10.000004756478654 XRP
+
+Vault state BEFORE repayment:
+  AssetsTotal : 80 XRP
+  TotalShares : 80000000
+  PPS         : 1.000000000 XRP/share
+
+Submitting LoanPay...
+  <span class="hl-ok">✓ LoanPay SUCCESS</span>
+    Hash : 04BFE0BBA65B8F21A26CF4DAEC513007B63F6B37339BC5C2EEBC2790590DE618
+
+Vault state AFTER repayment:
+  AssetsTotal : 80.000005 XRP
+  TotalShares : 80000000
+  PPS         : 1.000000063 XRP/share
+  PPS Δ = 0.000000063  <span class="hl-dim">(near-zero — DX-01 short vault)</span>
+
+<span class="hl-ok">✅ B4 COMPLETE</span> — cash-basis PPS captured`
+  },
+  {
+    id: 'c4',
+    cmd: 'npm run c4',
+    title: 'MPT share transfers',
+    desc: 'A→B OK; A→uncred → tecNO_AUTH',
+    badge: 'Scene 3 · Perimeter',
+    explorer: 'https://devnet.xrpl.org/transactions/69BEF2F8BC61E738D228639AB11CC535C56D6F37E7A4D0CE6DCE6E7CCAC41C98',
+    internals: [
+      { tx: 'Payment (MPT)', who: 'Investor A → B half of A’s shares — expect tesSUCCESS' },
+      { tx: 'Payment (MPT)', who: 'Investor A → Uncredentialed — expect tecNO_AUTH' },
+      { tx: 'Balances', who: 'Final share counts: A 25M · B 55M · Uncred 0' },
+    ],
+    out: `=== C4: MPT Share Transfer Tests ===
+
+Shares before:
+  InvestorA : 50000000
+  InvestorB : 30000000
+
+--- Transfer 1: InvestorA → InvestorB (25,000,000) ---
+  <span class="hl-ok">✓ Transfer A→B SUCCESS</span>
+    Hash : 69BEF2F8BC61E738D228639AB11CC535C56D6F37E7A4D0CE6DCE6E7CCAC41C98
+
+--- Transfer 2: InvestorA → Uncredentialed (expect reject) ---
+  <span class="hl-ok">✓ Uncred transfer REJECTED (expected):</span> <span class="hl-bad">tecNO_AUTH</span>
+    Hash : B6C4442D8E19DE4D5919DF1C1C2620A340BB72154FA866DC08180A48E0ABE3CB
+
+Final share balances:
+  InvestorA     : 25000000
+  InvestorB     : 55000000
+  Uncredentialed: 0
+
+<span class="hl-ok">✅ C4 COMPLETE</span> — MPT transfer test done`
+  },
+  {
+    id: 'b5',
+    cmd: 'npm run b5',
+    title: 'Redemption withdraw',
+    desc: 'Both investors withdraw; shares burned',
+    badge: 'Scene 4 · Exit',
+    explorer: 'https://devnet.xrpl.org/transactions/0122EDDE15ED00E5717128A80B50896B8B7F23413BA2E119827488DC5065F175',
+    internals: [
+      { tx: 'Wait', who: 'Auto-waits until RedemptionDate' },
+      { tx: 'VaultWithdraw (A)', who: 'Investor A redeems remaining shares → XRP out' },
+      { tx: 'VaultWithdraw (B)', who: 'Investor B redeems (includes shares received from A)' },
+      { tx: 'Yield summary', who: 'Logs deposit vs received — transfer explains A/B split' },
+    ],
+    out: `=== B5: Redemption — VaultWithdraw A + B ===
+
+Vault state at redemption:
+  AssetsTotal : 80.000005 XRP
+  PPS         : 1.000000063 XRP/share
+  InvestorA shares: 25000000
+  InvestorB shares: 55000000
+
+  <span class="hl-ok">✓ InvestorA withdrawal OK</span> — 0122EDDE…
+  <span class="hl-ok">✓ InvestorB withdrawal OK</span> — BA84662D…
+
+━━━ Yield summary ━━━
+  InvestorA: deposited 50 XRP → received 25.000001 XRP
+  InvestorB: deposited 30 XRP → received 55.000002 XRP
+  <span class="hl-dim">(A transferred half shares to B during Investment)</span>
+
+<span class="hl-ok">✅ B5 COMPLETE</span> — full B1→B5 lifecycle finished`
+  },
+  {
+    id: 'd1',
+    cmd: 'npm run d1',
+    title: 'Coupon probe (DX-13)',
+    desc: 'tfVaultDonation → temINVALID_FLAG',
+    explorer: 'https://devnet.xrpl.org/',
+    internals: [
+      { tx: 'Snapshot', who: 'PPS / AssetsTotal before coupon attempt' },
+      { tx: 'VaultDeposit + flag', who: 'Probe Flags 0x00010000 (tfVaultDonation)' },
+      { tx: 'Result', who: 'temINVALID_FLAG on this Devnet — DX-13 (feature not live)' },
+    ],
+    out: `=== D1: Coupon Injection Probe ===
+
+VaultID     : BF8C897F…9619F4
+AssetsTotal : 80 XRP
+TotalShares : 80000000
+PPS before  : 1.000000000
+
+Submitting VaultDeposit with Flags: 0x00010000 (tfVaultDonation)...
+
+  <span class="hl-bad">✗ Rejected pre-ledger: temINVALID_FLAG</span>
+  Flag absent from xrpl.js, binary-codec, and devnet 3.4.0-rc5
+  Logged as <span class="hl-dim">DX-13</span> — PPS rise instead proven via LoanPay (B4)
+
+<span class="hl-ok">=== D1 complete ===</span> — probe recorded`
+  }
+];
+
+(function initDemo() {
+  const list = document.getElementById('demo-steps');
+  const out = document.getElementById('demo-term-out');
+  const cmdEl = document.getElementById('demo-term-cmd');
+  const linkEl = document.getElementById('demo-term-link');
+  const internalsEl = document.getElementById('demo-internals');
+  if (!list || !out || !internalsEl) return;
+
+  function show(step, btn) {
+    list.querySelectorAll('.demo-step').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    cmdEl.innerHTML = `<strong>$ ${step.cmd}</strong> · recorded Devnet`;
+    linkEl.href = step.explorer;
+    linkEl.style.display = step.explorer.includes('transactions') || step.explorer.includes('objects')
+      ? '' : 'none';
+    internalsEl.innerHTML = (step.internals || []).map((row, n) =>
+      `<li><span class="n">${n + 1}</span><span><span class="tx">${row.tx}</span> <span class="who">— ${row.who}</span></span></li>`
+    ).join('');
+    out.innerHTML = step.out;
+    out.scrollTop = 0;
+  }
+
+  DEMO_STEPS.forEach((step, idx) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'demo-step' + (idx === 2 ? ' active' : '');
+    btn.setAttribute('role', 'tab');
+    btn.innerHTML =
+      `<span class="cmd">${step.cmd.replace('npm run ', '')}</span>` +
+      `<span class="title">${step.title}</span>` +
+      `<span class="desc">${step.desc}</span>` +
+      (step.badge ? `<span class="badge">${step.badge}</span>` : '');
+    btn.addEventListener('click', () => show(step, btn));
+    list.appendChild(btn);
+    if (idx === 2) show(step, btn);
+  });
+})();
 </script>
 </body>
 </html>

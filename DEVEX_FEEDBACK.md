@@ -1,16 +1,16 @@
 # Developer Experience Feedback Report
 
-**Track:** Track 2 — Closed-ended Vault  
+**Track:** Track 2 · Closed-ended Vault  
 **Flavour:** Loaded (Permissioned Domains + Credentials + MPT shares)  
 **Environment:** XRPL public Devnet  
 **Library:** `xrpl.js@5.2.0-beta.1` (we also hit several issues on `beta.0` before the organizer upgrade)  
 
-**Team:** quant-lending — Ramiro Rodriguez, Boris Danailov  
+**Team:** quant-lending · Ramiro Rodriguez, Boris Danailov  
 **Event:** XRPL Lending Protocol Hackathon · DeVinci Blockchain / Ripple · 13 Sep 2026  
 
 We ran the mandated DevEx hook locally (invite `BFT-PARIS-26`).  
 
-Structured issue write-ups (category, title, description, repro / tx links, severity, library version, proposed fix) live in **[`docs/DEVEX_LOG.md`](docs/DEVEX_LOG.md)** — indexed as DX-01 through DX-14. This root file is the short manual report: what we tried, what surprised us, and what we would change.
+Structured issue write-ups (category, title, description, repro / tx links, severity, library version, proposed fix) live in **[`docs/DEVEX_LOG.md`](docs/DEVEX_LOG.md)**, indexed as DX-01 through DX-18. This root file is the short manual report: what we tried, what surprised us, and what we would change.
 
 ---
 
@@ -28,9 +28,9 @@ Below we answer the Track 2 “Feedback to capture” questions from that run.
 
 The *idea* is intuitive. Once someone tells you “Subscription, then Investment, then Redemption,” the product story clicks. Implementing it the first time did not.
 
-We started the way most tutorials nudge you: create a vault, try to attach a loan broker. That failed with `tecNO_PERMISSION` and a message about not owning the vault — except we *did* own it. The real issue was vault kind: lending expects a **closed-ended** vault. Open-ended is the quiet default. Nothing in the happy-path docs put “set `VaultKind` and the two dates first” in front of us.
+We started the way most tutorials nudge you: create a vault, try to attach a loan broker. That failed with `tecNO_PERMISSION` and a message about not owning the vault, except we *did* own it. The real issue was vault kind: lending expects a **closed-ended** vault. Open-ended is the quiet default. Nothing in the happy-path docs put “set `VaultKind` and the two dates first” in front of us.
 
-**Proposed fix:** A single Track 2 quickstart that creates a closed-ended vault with dates, then `LoanBrokerSet`, in that order — and error text that says “vault is open-ended / wrong kind,” not “you don’t own this vault.”  
+**Proposed fix:** A single Track 2 quickstart that creates a closed-ended vault with dates, then `LoanBrokerSet`, in that order, and error text that says “vault is open-ended / wrong kind,” not “you don’t own this vault.”  
 Details: [DX-05](docs/DEVEX_LOG.md#dx-05--vaultkind-subscriptiondate-redemptiondate-are-xls-65-v11-fields-completely-absent-from-published-vaultcreate-docs).
 
 ### Were `VaultKind`, `SubscriptionDate` and `RedemptionDate` self-explanatory?
@@ -71,7 +71,7 @@ Related: [DX-04](docs/DEVEX_LOG.md#dx-04--vault_info-response-shape-undocumented
 
 The ledger did what cash-basis says: originating the loan did not pump PPS the way a full-accrual mental model expects. Value showed up when cash hit the vault (`LoanPay`, and separately our coupon probe with `tfVaultDonation`).
 
-What we did *not* expect from the docs: on a **short** Investment window, even a high annualized `InterestRate` moves PPS by dust. So “repay and watch yield” is a bad demo unless you also document the donation/coupon path — and that flag is painful to discover in the current SDK/docs.
+What we did *not* expect from the docs: on a **short** Investment window, even a high annualized `InterestRate` moves PPS by dust. So “repay and watch yield” is a bad demo unless you also document the donation/coupon path, and that flag is painful to discover in the current SDK/docs.
 
 **Proposed fix:** Explicitly document cash-basis at origination vs payment; document short-duration yield limits; expose `tfVaultDonation` as a named flag with a “demo / test yield” note.  
 Details: [DX-01](docs/DEVEX_LOG.md#dx-01--interestrate-annualized-formula-produces-unobservable-yield-in-short-duration-vaults), [DX-13](docs/DEVEX_LOG.md#dx-13--tfvaultdonation-flag-absent-from-xrpljs-sdk-ripple-binary-codec-and-published-docs).
@@ -82,10 +82,10 @@ Details: [DX-01](docs/DEVEX_LOG.md#dx-01--interestrate-annualized-formula-produc
 
 These were not on the Track 2 bullet list, but they blocked or misled us while shipping the Loaded flavour:
 
-- **Dual-party `LoanSet` signing** — stock `signLoanSetByCounterparty` still uses the old STX prefix after the CPT amendment; every loan failed until we signed with `encodeForSigningCounterparty` ourselves. **Fix:** one-line SDK change. → [DX-06](docs/DEVEX_LOG.md#dx-06--signloansetbycounterparty-uses-wrong-signing-prefix-after-fixcleanup3_4_0-amendment)  
-- **Private vault + domain** — `DomainID` needs `tfVaultPrivate`; neither the field name nor the flag pairing was obvious. → [DX-07](docs/DEVEX_LOG.md#dx-07--vaultcreate-field-for-permissioned-domain-is-domainid-not-permissioneddomainid), [DX-08](docs/DEVEX_LOG.md#dx-08--vaultcreate-requires-tfvaultprivate-flag-when-domainid-is-set-undocumented-coupling)  
-- **Vault share MPT auth** — we could not set `lsfMPTRequireAuth` on the vault’s share issuance (`tecNO_PERMISSION`). Domain gate at deposit ≠ full transfer perimeter. → [DX-09](docs/DEVEX_LOG.md#dx-09--mptokenisuanceset-with-tfmptseterequireauth-returns-tecno_permission-on-vault-share-mpts), [DX-10](docs/DEVEX_LOG.md#dx-10--vaultdeposit-domain-gate-creates-implicit-mpt-transfer-barrier-via-mptoken-entry-requirement)  
-- **Devnet connectivity** — WSS only on port 51233 plus a short default timeout is rough on event Wi‑Fi. → [DX-02](docs/DEVEX_LOG.md#dx-02--devnet-websocket-exposes-only-port-51233-blocked-by-corporate-and-isp-firewalls), [DX-03](docs/DEVEX_LOG.md#dx-03--xrpljs-default-5s-connectiontimeout-too-short-for-mobile--event-networks)
+- **Dual-party `LoanSet` signing:** stock `signLoanSetByCounterparty` still uses the old STX prefix after the CPT amendment; every loan failed until we signed with `encodeForSigningCounterparty` ourselves. **Fix:** one-line SDK change. → [DX-06](docs/DEVEX_LOG.md#dx-06--signloansetbycounterparty-uses-wrong-signing-prefix-after-fixcleanup3_4_0-amendment)  
+- **Private vault + domain:** `DomainID` needs `tfVaultPrivate`; neither the field name nor the flag pairing was obvious. → [DX-07](docs/DEVEX_LOG.md#dx-07--vaultcreate-field-for-permissioned-domain-is-domainid-not-permissioneddomainid), [DX-08](docs/DEVEX_LOG.md#dx-08--vaultcreate-requires-tfvaultprivate-flag-when-domainid-is-set-undocumented-coupling)  
+- **Vault share MPT auth:** we could not set `lsfMPTRequireAuth` on the vault’s share issuance (`tecNO_PERMISSION`). Domain gate at deposit ≠ full transfer perimeter. → [DX-09](docs/DEVEX_LOG.md#dx-09--mptokenisuanceset-with-tfmptseterequireauth-returns-tecno_permission-on-vault-share-mpts), [DX-10](docs/DEVEX_LOG.md#dx-10--vaultdeposit-domain-gate-creates-implicit-mpt-transfer-barrier-via-mptoken-entry-requirement)  
+- **Devnet connectivity:** WSS only on port 51233 plus a short default timeout is rough on event Wi-Fi. → [DX-02](docs/DEVEX_LOG.md#dx-02--devnet-websocket-exposes-only-port-51233-blocked-by-corporate-and-isp-firewalls), [DX-03](docs/DEVEX_LOG.md#dx-03--xrpljs-default-5s-connectiontimeout-too-short-for-mobile--event-networks)
 
 ---
 
@@ -93,4 +93,4 @@ These were not on the Track 2 bullet list, but they blocked or misled us while s
 
 For the format required in the brief (category, title, description, repro or tx/code link, severity, library + version, proposed fix), see:
 
-**→ [`docs/DEVEX_LOG.md`](docs/DEVEX_LOG.md)**
+**[`docs/DEVEX_LOG.md`](docs/DEVEX_LOG.md)**
