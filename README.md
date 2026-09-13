@@ -33,13 +33,19 @@ The fund lifecycle maps onto the three phases of a closed-ended vault:
 - [x] Investor A/B `VaultWithdraw` / share burn (`b5`)
 - [x] Phase A smoke path (`smoke:a2`–`a4`) and DevEx hook invite
 
-**Not yet (Loaded + polish — Phase C/D)**
+**Done (Loaded — Phase C)**
 
-- [ ] Permissioned Domain + KYC Credentials issued to investors
-- [ ] Credential-gated deposits (uncredentialed `VaultDeposit` rejected)
-- [ ] MPT `lsfMPTRequireAuth` authorization ring
-- [ ] Pre-maturity MPT share transfer A→B; transfer to uncredentialed rejected
-- [ ] Coupon injection (`VaultDeposit` + `tfVaultDonation`) with before/after PPS
+- [x] Permissioned Domain created + KYC credentials issued/accepted for Investor A/B (`c1`)
+- [x] Credential-gated `VaultCreate` (`DomainID` + `tfVaultPrivate`) — domain gate live (`b1`)
+- [x] Uncredentialed `VaultDeposit` probe in b2 (captures rejection verbatim when `DOMAIN_ID` set)
+- [x] Pre-maturity MPT share transfer A→B (tesSUCCESS); A→Uncredentialed (`tecNO_AUTH`) (`c4`)
+- [x] MPT auth probe (`c2`) — surfaces `tecNO_PERMISSION` on vault-managed MPTs (DX-09 logged)
+- [x] DevEx findings DX-07 through DX-10 logged in `docs/DEVEX_LOG.md`
+- [x] Full Phase C `c1 → b0 → b1 → b2 → b3 → b4 → c2 → c4 → b5` lifecycle verified on Devnet
+
+**Not yet (Phase D / polish)**
+
+- [ ] Coupon injection (`VaultDeposit` + `tfVaultDonation`) with before/after PPS (`b2.5`)
 - [ ] Wrong-phase rejection demos (`10_rejection_demos.ts`)
 - [ ] README on-chain tx table filled with explorer links
 
@@ -74,8 +80,8 @@ Run and verify the done path: [`TESTING.md`](TESTING.md).
 | Loan repayment | Investment | `scripts/08_repayment.ts` | Done |
 | `VaultWithdraw` | Redemption | `scripts/09_redemption.ts` | Done |
 | `VaultDeposit` — `tfVaultDonation` coupon | Investment | `scripts/06_coupon_injection.ts` | Not yet |
-| Permissioned Domain / Credentials | Setup | `scripts/03_permissioned_domain.ts` | Not yet |
-| MPT share transfer (+ rejection) | Investment | `scripts/07_mpt_transfer.ts` | Not yet |
+| Permissioned Domain / Credentials | Setup | `scripts/03_permissioned_domain.ts` | Done |
+| MPT share transfer (+ rejection) | Investment | `scripts/07_mpt_transfer.ts` | Done |
 | Phase-gate rejections | All phases | `scripts/10_rejection_demos.ts` | Not yet |
 
 ---
@@ -86,16 +92,19 @@ Run and verify the done path: [`TESTING.md`](TESTING.md).
 
 | Step | Transaction hash | Explorer |
 |---|---|---|
-| VaultCreate | — | — |
-| Subscription — Investor A | — | — |
-| Subscription — Investor B | — | — |
-| LoanSet | — | — |
-| Drawdown | — | — |
+| VaultCreate (gated) | (VAULT_ID in .env) | [devnet.xrpl.org](https://devnet.xrpl.org) |
+| PermissionedDomainSet | CE2BC85376404029F8857B51F8D9828F0C6FB15CD4676C5ED960E7AEAAAA9CEB | [explorer](https://devnet.xrpl.org/objects/CE2BC85376404029F8857B51F8D9828F0C6FB15CD4676C5ED960E7AEAAAA9CEB) |
+| CredentialCreate + Accept (A, B) | see c1 stdout | — |
+| Subscription — Investor A | see b2 stdout | — |
+| Subscription — Investor B | see b2 stdout | — |
+| LoanSet (dual-sign) | E33F919188D478B9743750FB36E440F303AC15B492340069BF189A872A59A762 | [explorer](https://devnet.xrpl.org/transactions/E33F919188D478B9743750FB36E440F303AC15B492340069BF189A872A59A762) |
+| Drawdown | included in LoanSet | — |
 | Coupon injection | — | — |
-| MPT transfer A → B | — | — |
-| Repayment | — | — |
-| Redemption — Investor A | — | — |
-| Redemption — Investor B | — | — |
+| MPT transfer A → B | 19A85874E02907186CD3C3726B0787D53E5CB53DA03E3B770A437ACF44EF97EC | [explorer](https://devnet.xrpl.org/transactions/19A85874E02907186CD3C3726B0787D53E5CB53DA03E3B770A437ACF44EF97EC) |
+| MPT transfer A → Uncredentialed (rejected) | 244DB57E1E123DBB79AE6CEC24C7F960A3D526EF98613BF357D7B6CA4BD46041 | [explorer](https://devnet.xrpl.org/transactions/244DB57E1E123DBB79AE6CEC24C7F960A3D526EF98613BF357D7B6CA4BD46041) |
+| Repayment | 3EB99740A3E70E3BD527EE3C8831CE1A2F80BC2BE366BD697044931C8907614D | [explorer](https://devnet.xrpl.org/transactions/3EB99740A3E70E3BD527EE3C8831CE1A2F80BC2BE366BD697044931C8907614D) |
+| Redemption — Investor A | 1CEE101DCD2692F15B0D0CB6BE00100E8DFC76F7A64DAD6E8CE913CE27C7D74C | [explorer](https://devnet.xrpl.org/transactions/1CEE101DCD2692F15B0D0CB6BE00100E8DFC76F7A64DAD6E8CE913CE27C7D74C) |
+| Redemption — Investor B | 41B3818C1AA266B34908FEEA0C061B5ED2D234FB58300B7A550820CBF4930817 | [explorer](https://devnet.xrpl.org/transactions/41B3818C1AA266B34908FEEA0C061B5ED2D234FB58300B7A550820CBF4930817) |
 
 ---
 
