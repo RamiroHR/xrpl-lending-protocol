@@ -45,11 +45,12 @@ How the KYC credential gate works (trust chain, dual-signature model, MPT auth):
 - [x] DevEx findings DX-07 through DX-12 logged in `docs/DEVEX_LOG.md` (12 total)
 - [x] Full Phase C `c1 → b0 → b1 → b2 → b3 → b4 → c2 → c4 → b5` lifecycle verified on Devnet
 
-**Not yet (Phase D / polish)**
+**Done (Phase D)**
 
-- [ ] Coupon injection (`VaultDeposit` + `tfVaultDonation`) with before/after PPS (`b2.5`)
-- [ ] Wrong-phase rejection demos (`10_rejection_demos.ts`)
-- [ ] README on-chain tx table filled with explorer links
+- [x] Coupon injection probe (`VaultDeposit` + `tfVaultDonation`) — PPS before/after, DX-13 probe (`d1`)
+- [x] Phase-gate rejection demos — 3+ verbatim rejection codes captured (`d2`)
+- [x] DevEx feedback report — 8 findings with proposed fixes at [`docs/DEVEX_REPORT.md`](docs/DEVEX_REPORT.md)
+- [x] On-chain transactions table filled with Devnet explorer links
 
 Run and verify the done path: [`TESTING.md`](TESTING.md).
 
@@ -81,10 +82,10 @@ Run and verify the done path: [`TESTING.md`](TESTING.md).
 | Loan drawdown | Investment | `scripts/05_investment.ts` | Done |
 | Loan repayment | Investment | `scripts/08_repayment.ts` | Done |
 | `VaultWithdraw` | Redemption | `scripts/09_redemption.ts` | Done |
-| `VaultDeposit` — `tfVaultDonation` coupon | Investment | `scripts/06_coupon_injection.ts` | Not yet |
+| `VaultDeposit` — `tfVaultDonation` coupon | Investment | `scripts/06_coupon_injection.ts` | Done |
 | Permissioned Domain / Credentials | Setup | `scripts/03_permissioned_domain.ts` | Done |
 | MPT share transfer (+ rejection) | Investment | `scripts/07_mpt_transfer.ts` | Done |
-| Phase-gate rejections | All phases | `scripts/10_rejection_demos.ts` | Not yet |
+| Phase-gate rejections | All phases | `scripts/10_rejection_demos.ts` | Done |
 
 ---
 
@@ -105,6 +106,7 @@ Run and verify the done path: [`TESTING.md`](TESTING.md).
 | MPT transfer A → Uncredentialed (`tecNO_AUTH`) | `B6C4442D` | [explorer](https://devnet.xrpl.org/transactions/B6C4442D8E19DE4D5919DF1C1C2620A340BB72154FA866DC08180A48E0ABE3CB) |
 | Redemption — Investor A | `0122EDDE` | [explorer](https://devnet.xrpl.org/transactions/0122EDDE15ED00E5717128A80B50896B8B7F23413BA2E119827488DC5065F175) |
 | Redemption — Investor B | `BA84662D` | [explorer](https://devnet.xrpl.org/transactions/BA84662D4B2C9ED8E9EB9688893547211308A86BABA807D4594FB868BA6CEB74) |
+| Coupon injection (`tfVaultDonation` probe) | `temINVALID_FLAG` — flag absent from devnet 3.4.0-rc5 (rejected pre-ledger; see [DX-13](docs/DEVEX_LOG.md#dx-13--tfvaultdonation-flag-absent-from-xrpljs-sdk-ripple-binary-codec-and-published-docs)) | — |
 
 ---
 
@@ -160,7 +162,15 @@ root/
 
 Friction points are logged continuously in [`docs/DEVEX_LOG.md`](docs/DEVEX_LOG.md) throughout the sprint.
 
-The formal submission feedback report will be at `DEVEX_FEEDBACK.md` (repo root) at submission time.
+The formal submission feedback report is at [`docs/DEVEX_REPORT.md`](docs/DEVEX_REPORT.md) — 8 findings with concrete proposed fixes.
+
+---
+
+## Pitch deck
+
+HTML pitch (≤10 sections, keyboard ← →): open [`pitch.html`](pitch.html) in a browser.
+
+**Speaker script & demo narration** (what to say, timing, explorer cues): [`docs/PITCH_SCRIPT.md`](docs/PITCH_SCRIPT.md).
 
 ---
 

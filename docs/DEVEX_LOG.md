@@ -24,6 +24,8 @@ Severity scale: **Low** (minor inconvenience) · **Medium** (workaround required
 | [DX-10](#dx-10--vaultdeposit-domain-gate-creates-implicit-mpt-transfer-barrier-via-mptoken-entry-requirement) | `VaultDeposit` domain gate creates implicit MPT transfer barrier via MPToken entry requirement | DOC GAP | Medium |
 | [DX-11](#dx-11--credentialcreate-is-not-idempotent-re-running-c1-setup-fails-with-tecduplicate) | `CredentialCreate` is not idempotent — re-running setup fails with `tecDUPLICATE` | API Confusion | Medium |
 | [DX-12](#dx-12--graceperiod-in-loanset-opens-the-payment-window-before-nextpaymentdue-not-after) | `GracePeriod` in `LoanSet` opens payment window BEFORE `NextPaymentDue`, not after | API Confusion | High |
+| [DX-13](#dx-13--tfvaultdonation-flag-absent-from-xrpljs-sdk-ripple-binary-codec-and-published-docs) | `tfVaultDonation` flag absent from xrpl.js SDK, ripple-binary-codec, and published docs | DOC GAP / SDK FRICTION | High |
+| [DX-14](#dx-14--vaultdeposit-accepts-1-drop-amounts-no-minimum-deposit-enforced-at-protocol-level) | `VaultDeposit` accepts 1-drop amounts; no minimum deposit enforced at protocol level | DOC GAP | Low |
 
 ---
 
@@ -524,5 +526,58 @@ await waitForPhase(client, nextDue - SUBMISSION_LEAD_TIME, 'payment submission w
 
 1. **XLS-66 spec / `LoanSet` docs:** Rename the field or add a prominent callout clarifying that `GracePeriod` defines the window opening time relative to `NextPaymentDue`, not an extension after it. A diagram showing `[NextPaymentDue - GracePeriod, NextPaymentDue)` would eliminate the confusion.
 2. **Error improvement:** `tecEXPIRED` on `LoanPay` should include the payment deadline and submission time in the error metadata so developers can immediately see they were late rather than having to compute epoch offsets manually.
+
+---
+
+## DX-13 — `tfVaultDonation` flag absent from xrpl.js SDK, ripple-binary-codec, and published docs
+
+**Category:** DOC GAP / SDK FRICTION
+**Severity:** High
+**Library:** `xrpl.js@5.2.0-beta.1` · `ripple-binary-codec@^3.0.0` · rippled Devnet 3.4.0-rc5 (XLS-65 V1.1)
+**Date:** 2026-09-13
+
+### Description
+
+XLS-65 V1.1 defines a `tfVaultDonation` flag for `VaultDeposit` that enables a coupon injection — a deposit that increases `AssetsTotal` (and thus PPS) without minting new shares. This flag is not present in any developer-facing tool:
+
+- **xrpl.js@5.2.0-beta.1**: no `tfVaultDonation` export in `VaultDepositFlags` or transaction flags
+- **ripple-binary-codec**: `TRANSACTION_FLAGS` contains no VaultDeposit entry at all
+- **Published XRPL docs (rippled 3.3.x reference)**: VaultDeposit page states "No Flags" — the flags section is empty
+- **Reference implementation** (`xrpl-reference-app-lending-sav`): no usage of `tfVaultDonation`
+
+Without a canonical flag value a developer cannot implement coupon injection. The only approach is to probe candidate bit positions against devnet and capture the result, which is what this project did (probe Flags: `0x00010000`).
+
+### Reproduction
+
+Search for `tfVaultDonation` in xrpl.js source, ripple-binary-codec definitions, and XRPL docs — zero results. Devnet probe result: TBD (run `npm run d1`).
+
+### Proposed fix
+
+1. **xrpl.js:** Export `tfVaultDonation` in a `VaultDepositFlags` object alongside other XLS-65 tx flags.
+2. **ripple-binary-codec:** Add a `VaultDeposit` entry to `TRANSACTION_FLAGS` with `tfVaultDonation` and its canonical bit value.
+3. **XRPL docs:** Update the VaultDeposit reference page to list `tfVaultDonation`, its bit value, and a description of the coupon injection mechanic (deposits assets without minting shares, raises PPS for existing share holders).
+
+---
+
+## DX-14 — `VaultDeposit` accepts 1-drop amounts; no minimum deposit enforced at protocol level
+
+**Category:** DOC GAP
+**Severity:** Low
+**Library:** `xrpl.js@5.2.0-beta.1` · rippled Devnet 3.4.0-rc5 (XLS-65 V1.1)
+**Date:** 2026-09-13
+
+### Description
+
+`VaultDeposit` with `Amount: '1'` (1 drop = 0.000001 XRP) returns `tesSUCCESS` and mints the corresponding fractional shares. There is no minimum deposit amount enforced at the protocol level. XLS-65 and the VaultDeposit reference page do not mention whether a minimum exists or is intentionally absent.
+
+In typical DeFi protocols, dust deposits (amounts below a practical threshold) are prevented to avoid share-accounting precision issues and griefing (e.g., an attacker deposits 1 drop millions of times to pollute the MPT issuance state). The absence of any minimum amount validation is not documented as an intentional design choice.
+
+**Observed:** `VaultDeposit { Amount: '1' }` → `tesSUCCESS` (tx hash: `BCAEEBBC582E188BF8117E338E4BEAAFF2D9C077A0C4669D80DFF5D29E2ADD5D`)
+
+### Proposed fix
+
+1. **XLS-65 spec:** Explicitly state whether a minimum deposit amount exists. If none is intended, document the rationale (e.g., XRPL reserve system provides sufficient griefing protection).
+2. **VaultDeposit docs:** Add a "Minimum amount" row to the transaction parameter table — either stating the minimum or "None (any amount ≥ 1 drop is accepted)".
+3. **Optional:** Consider adding a configurable `MinimumDeposit` field to `VaultCreate` to allow vault operators to enforce their own floor.
 
 ---
