@@ -39,10 +39,10 @@ How the KYC credential gate works (trust chain, dual-signature model, MPT auth):
 
 - [x] Permissioned Domain created + KYC credentials issued/accepted for Investor A/B (`c1`)
 - [x] Credential-gated `VaultCreate` (`DomainID` + `tfVaultPrivate`) — domain gate live (`b1`)
-- [x] Uncredentialed `VaultDeposit` probe in b2 (captures rejection verbatim when `DOMAIN_ID` set)
-- [x] Pre-maturity MPT share transfer A→B (tesSUCCESS); A→Uncredentialed (`tecNO_AUTH`) (`c4`)
+- [x] Uncredentialed `VaultDeposit` probe in b2 — `tecNO_AUTH` captured verbatim on-chain (`c3`)
+- [x] Pre-maturity MPT share transfer A→B (`tesSUCCESS`); A→Uncredentialed (`tecNO_AUTH`) (`c4`)
 - [x] MPT auth probe (`c2`) — surfaces `tecNO_PERMISSION` on vault-managed MPTs (DX-09 logged)
-- [x] DevEx findings DX-07 through DX-10 logged in `docs/DEVEX_LOG.md`
+- [x] DevEx findings DX-07 through DX-12 logged in `docs/DEVEX_LOG.md` (12 total)
 - [x] Full Phase C `c1 → b0 → b1 → b2 → b3 → b4 → c2 → c4 → b5` lifecycle verified on Devnet
 
 **Not yet (Phase D / polish)**
@@ -94,19 +94,17 @@ Run and verify the done path: [`TESTING.md`](TESTING.md).
 
 | Step | Transaction hash | Explorer |
 |---|---|---|
-| VaultCreate (gated) | (VAULT_ID in .env) | [devnet.xrpl.org](https://devnet.xrpl.org) |
-| PermissionedDomainSet | CE2BC85376404029F8857B51F8D9828F0C6FB15CD4676C5ED960E7AEAAAA9CEB | [explorer](https://devnet.xrpl.org/objects/CE2BC85376404029F8857B51F8D9828F0C6FB15CD4676C5ED960E7AEAAAA9CEB) |
-| CredentialCreate + Accept (A, B) | see c1 stdout | — |
-| Subscription — Investor A | see b2 stdout | — |
-| Subscription — Investor B | see b2 stdout | — |
-| LoanSet (dual-sign) | E33F919188D478B9743750FB36E440F303AC15B492340069BF189A872A59A762 | [explorer](https://devnet.xrpl.org/transactions/E33F919188D478B9743750FB36E440F303AC15B492340069BF189A872A59A762) |
-| Drawdown | included in LoanSet | — |
-| Coupon injection | — | — |
-| MPT transfer A → B | 19A85874E02907186CD3C3726B0787D53E5CB53DA03E3B770A437ACF44EF97EC | [explorer](https://devnet.xrpl.org/transactions/19A85874E02907186CD3C3726B0787D53E5CB53DA03E3B770A437ACF44EF97EC) |
-| MPT transfer A → Uncredentialed (rejected) | 244DB57E1E123DBB79AE6CEC24C7F960A3D526EF98613BF357D7B6CA4BD46041 | [explorer](https://devnet.xrpl.org/transactions/244DB57E1E123DBB79AE6CEC24C7F960A3D526EF98613BF357D7B6CA4BD46041) |
-| Repayment | 3EB99740A3E70E3BD527EE3C8831CE1A2F80BC2BE366BD697044931C8907614D | [explorer](https://devnet.xrpl.org/transactions/3EB99740A3E70E3BD527EE3C8831CE1A2F80BC2BE366BD697044931C8907614D) |
-| Redemption — Investor A | 1CEE101DCD2692F15B0D0CB6BE00100E8DFC76F7A64DAD6E8CE913CE27C7D74C | [explorer](https://devnet.xrpl.org/transactions/1CEE101DCD2692F15B0D0CB6BE00100E8DFC76F7A64DAD6E8CE913CE27C7D74C) |
-| Redemption — Investor B | 41B3818C1AA266B34908FEEA0C061B5ED2D234FB58300B7A550820CBF4930817 | [explorer](https://devnet.xrpl.org/transactions/41B3818C1AA266B34908FEEA0C061B5ED2D234FB58300B7A550820CBF4930817) |
+| VaultCreate (gated, DomainID + tfVaultPrivate) | `1899CC04` | [explorer](https://devnet.xrpl.org/transactions/1899CC0430528EF94E0C745DDDB6C20E9A4EA91D5BD0B5FBB2466C946E8F7B87) |
+| PermissionedDomainSet | `CE2BC853` (object) | [object](https://devnet.xrpl.org/objects/CE2BC85376404029F8857B51F8D9828F0C6FB15CD4676C5ED960E7AEAAAA9CEB) |
+| Uncred VaultDeposit — rejected `tecNO_AUTH` (C3) | `DFDCCA5D` | [explorer](https://devnet.xrpl.org/transactions/DFDCCA5DD81A13449D60B9B23F94D512679A64A0BD35EBBB90F8DB82FE6CB6F2) |
+| Subscription — Investor A | `B2AF328C` | [explorer](https://devnet.xrpl.org/transactions/B2AF328C5307EA99C222E63EA292899503713A770D64E28516E510C61E946794) |
+| Subscription — Investor B | `D8E73B08` | [explorer](https://devnet.xrpl.org/transactions/D8E73B0884CCDAD0A5292CBDDAD5BB6DCE40138DEBAD9751B173CD1902AFC762) |
+| LoanSet (dual-sign) + drawdown | `A7E879A0` | [explorer](https://devnet.xrpl.org/transactions/A7E879A04EE4450396320CEAEDB80A965190C3A69DA04CCCD138676D0066A39D) |
+| LoanPay (repayment) | `04BFE0BB` | [explorer](https://devnet.xrpl.org/transactions/04BFE0BBA65B8F21A26CF4DAEC513007B63F6B37339BC5C2EEBC2790590DE618) |
+| MPT transfer A → B (`tesSUCCESS`) | `69BEF2F8` | [explorer](https://devnet.xrpl.org/transactions/69BEF2F8BC61E738D228639AB11CC535C56D6F37E7A4D0CE6DCE6E7CCAC41C98) |
+| MPT transfer A → Uncredentialed (`tecNO_AUTH`) | `B6C4442D` | [explorer](https://devnet.xrpl.org/transactions/B6C4442D8E19DE4D5919DF1C1C2620A340BB72154FA866DC08180A48E0ABE3CB) |
+| Redemption — Investor A | `0122EDDE` | [explorer](https://devnet.xrpl.org/transactions/0122EDDE15ED00E5717128A80B50896B8B7F23413BA2E119827488DC5065F175) |
+| Redemption — Investor B | `BA84662D` | [explorer](https://devnet.xrpl.org/transactions/BA84662D4B2C9ED8E9EB9688893547211308A86BABA807D4594FB868BA6CEB74) |
 
 ---
 
