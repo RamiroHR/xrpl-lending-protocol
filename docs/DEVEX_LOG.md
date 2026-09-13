@@ -4,6 +4,9 @@ Captured during hackathon development — Track 2 Loaded (Permissioned Domains +
 Environment: XRPL public Devnet · Library: `xrpl.js@5.2.0-beta.1` · Protocol: XLS-65/66 V1.1  
 *(Findings DX-01 through DX-06 were observed on `xrpl.js@5.2.0-beta.0`; project upgraded to beta.1 per organizer update on 2026-09-13.)*
 
+**Manual narrative report (repo root):** [`../DEVEX_FEEDBACK.md`](../DEVEX_FEEDBACK.md) — answers the Track 2 “Feedback to capture” questions.  
+**This file** is the structured issue catalog required by the brief: for each finding, category · title · description · repro / tx or code link · severity · library version · proposed fix.
+
 Severity scale: **Low** (minor inconvenience) · **Medium** (workaround required) · **High** (blocks progress or correctness)
 
 ---

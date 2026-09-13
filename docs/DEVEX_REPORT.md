@@ -10,6 +10,8 @@
 - **Date:** 2026-09-13
 - **Team:** DeVinci Blockchain — XRPL Lending Protocol Hackathon 2026
 
+> **Submission copy:** [`../DEVEX_FEEDBACK.md`](../DEVEX_FEEDBACK.md) is the root manual report (narrative Track 2 answers + proposed fixes, links into the log). Prefer that file for judging. This longer draft is optional reading.
+
 ---
 
 ## Summary

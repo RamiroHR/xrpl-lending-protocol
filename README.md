@@ -49,7 +49,7 @@ How the KYC credential gate works (trust chain, dual-signature model, MPT auth):
 
 - [x] Coupon injection probe (`VaultDeposit` + `tfVaultDonation`) — PPS before/after, DX-13 probe (`d1`)
 - [x] Phase-gate rejection demos — 3+ verbatim rejection codes captured (`d2`)
-- [x] DevEx feedback report — 8 findings with proposed fixes at [`docs/DEVEX_REPORT.md`](docs/DEVEX_REPORT.md)
+- [x] DevEx feedback report — submission copy at [`DEVEX_FEEDBACK.md`](DEVEX_FEEDBACK.md) (full draft [`docs/DEVEX_REPORT.md`](docs/DEVEX_REPORT.md); log [`docs/DEVEX_LOG.md`](docs/DEVEX_LOG.md))
 - [x] On-chain transactions table filled with Devnet explorer links
 
 Run and verify the done path: [`TESTING.md`](TESTING.md).
@@ -162,7 +162,7 @@ root/
 
 Friction points are logged continuously in [`docs/DEVEX_LOG.md`](docs/DEVEX_LOG.md) throughout the sprint.
 
-The formal submission feedback report is at [`docs/DEVEX_REPORT.md`](docs/DEVEX_REPORT.md) — 8 findings with concrete proposed fixes.
+The formal submission feedback report is at [`DEVEX_FEEDBACK.md`](DEVEX_FEEDBACK.md) (repo root) — narrative answers to the Track 2 DevEx prompts. Structured findings: [`docs/DEVEX_LOG.md`](docs/DEVEX_LOG.md).
 
 ---
 
