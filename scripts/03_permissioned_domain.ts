@@ -50,14 +50,14 @@ async function fetchDomainId(
   return (domain?.index as string) ?? null;
 }
 
-/** Fetch Credential ledger index from subject's account_objects. */
-async function fetchCredentialId(
+/** Fetch a Credential and its acceptance state from subject's account_objects. */
+async function fetchCredential(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   client: any,
   subjectAddress: string,
   issuerAddress: string,
   credentialTypeHex: string,
-): Promise<string | null> {
+): Promise<{ id: string; accepted: boolean } | null> {
   const res = await client.request({
     command: 'account_objects',
     account: subjectAddress,
@@ -67,7 +67,23 @@ async function fetchCredentialId(
   const cred = (res.result?.account_objects as Array<Record<string, unknown>>)?.find(
     (obj) => obj.Issuer === issuerAddress && obj.CredentialType === credentialTypeHex,
   );
-  return (cred?.index as string) ?? null;
+  if (!cred) return null;
+  // lsfAccepted = 0x00010000
+  return { id: cred.index as string, accepted: ((cred.Flags as number) & 0x00010000) !== 0 };
+}
+
+/** Check whether a PermissionedDomain ledger object still exists on-chain. */
+async function domainExists(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  client: any,
+  domainId: string,
+): Promise<boolean> {
+  try {
+    await client.request({ command: 'ledger_entry', index: domainId, ledger_index: 'validated' });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 async function main(): Promise<void> {
@@ -80,125 +96,114 @@ async function main(): Promise<void> {
   console.log(`CredType  : ${CREDENTIAL_TYPE_TEXT}  (hex: ${CREDENTIAL_TYPE_HEX})\n`);
 
   await withClient(async (client) => {
-    // ── Step 1: Create Permissioned Domain ──────────────────────────────────
-    console.log('--- Step 1: PermissionedDomainSet (create) ---');
-    const pdTx = {
-      TransactionType: 'PermissionedDomainSet',
-      Account: broker.classicAddress,
-      AcceptedCredentials: [
-        {
-          Credential: {
-            Issuer: broker.classicAddress,
-            CredentialType: CREDENTIAL_TYPE_HEX,
+    // ── Step 1: Create (or reuse) Permissioned Domain ───────────────────────
+    console.log('--- Step 1: PermissionedDomainSet ---');
+    let domainId: string | null = process.env.DOMAIN_ID ?? null;
+
+    if (domainId && await domainExists(client, domainId)) {
+      console.log(`  ℹ️  DOMAIN_ID already in .env and exists on-chain — reusing`);
+      console.log(`    DOMAIN_ID : ${domainId}\n`);
+    } else {
+      if (domainId) console.log(`  ℹ️  Stale DOMAIN_ID in .env — creating fresh domain`);
+      const pdTx = {
+        TransactionType: 'PermissionedDomainSet',
+        Account: broker.classicAddress,
+        AcceptedCredentials: [
+          {
+            Credential: {
+              Issuer: broker.classicAddress,
+              CredentialType: CREDENTIAL_TYPE_HEX,
+            },
           },
-        },
-      ],
-    };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pdPrep   = await client.autofill(pdTx as any);
-    const pdSigned = broker.sign(pdPrep);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pdResult = await (client as any).submitAndWait(pdSigned.tx_blob);
-    assertSuccess(pdResult, 'PermissionedDomainSet');
+        ],
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const pdPrep   = await client.autofill(pdTx as any);
+      const pdSigned = broker.sign(pdPrep);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const pdResult = await (client as any).submitAndWait(pdSigned.tx_blob);
+      assertSuccess(pdResult, 'PermissionedDomainSet');
 
-    // Resolve domain ID: try AffectedNodes first (faster), fall back to account_objects
-    let domainId = extractCreatedLedgerId(pdResult, 'PermissionedDomain');
-    if (!domainId) {
-      const txSeq = (pdResult.result as Record<string, unknown>).Sequence as number;
-      console.log(`  AffectedNodes miss — querying account_objects (seq ${txSeq})...`);
-      await sleep(4000); // wait one ledger cycle
-      domainId = await fetchDomainId(client, broker.classicAddress, txSeq);
+      domainId = extractCreatedLedgerId(pdResult, 'PermissionedDomain');
+      if (!domainId) {
+        const txSeq = (pdResult.result as Record<string, unknown>).Sequence as number;
+        console.log(`  AffectedNodes miss — querying account_objects (seq ${txSeq})...`);
+        await sleep(4000);
+        domainId = await fetchDomainId(client, broker.classicAddress, txSeq);
+      }
+      if (!domainId) throw new Error('PermissionedDomainSet succeeded but DOMAIN_ID not found');
+
+      console.log(`  ✓ Domain created`);
+      console.log(`    DOMAIN_ID : ${domainId}`);
+      console.log(`    Hash      : ${pdResult.result.hash}`);
+      console.log(`    Explorer  : https://devnet.xrpl.org/transactions/${pdResult.result.hash}\n`);
     }
-    if (!domainId) throw new Error('PermissionedDomainSet succeeded but DOMAIN_ID not found in metadata or account_objects');
 
-    console.log(`  ✓ Domain created`);
-    console.log(`    DOMAIN_ID : ${domainId}`);
-    console.log(`    Hash      : ${pdResult.result.hash}`);
-    console.log(`    Explorer  : https://devnet.xrpl.org/transactions/${pdResult.result.hash}\n`);
+    // ── Steps 2–5: Issue + accept credentials (idempotent) ──────────────────
+    for (const { label, investor } of [
+      { label: 'InvestorA', investor: investorA },
+      { label: 'InvestorB', investor: investorB },
+    ]) {
+      const stepBase = label === 'InvestorA' ? 2 : 4;
+      const existing = await fetchCredential(client, investor.classicAddress, broker.classicAddress, CREDENTIAL_TYPE_HEX);
 
-    // ── Step 2: Issue credential to InvestorA ────────────────────────────────
-    console.log('--- Step 2: CredentialCreate → InvestorA ---');
-    const credATx = {
-      TransactionType: 'CredentialCreate',
-      Account: broker.classicAddress,
-      Subject: investorA.classicAddress,
-      CredentialType: CREDENTIAL_TYPE_HEX,
-      Expiration: xrplTimeNow() + ONE_YEAR_RIPPLE_SECS,
-      URI: CREDENTIAL_URI_HEX,
-    };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const credAPrep   = await client.autofill(credATx as any);
-    const credASigned = broker.sign(credAPrep);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const credAResult = await (client as any).submitAndWait(credASigned.tx_blob);
-    assertSuccess(credAResult, 'CredentialCreate (InvestorA)');
-    console.log(`  ✓ Credential issued to InvestorA`);
-    console.log(`    Hash    : ${credAResult.result.hash}`);
-    console.log(`    Explorer: https://devnet.xrpl.org/transactions/${credAResult.result.hash}\n`);
+      // CredentialCreate
+      console.log(`--- Step ${stepBase}: CredentialCreate → ${label} ---`);
+      if (existing) {
+        console.log(`  ℹ️  Credential already exists (ID: ${existing.id}) — skipping create\n`);
+      } else {
+        const credTx = {
+          TransactionType: 'CredentialCreate',
+          Account: broker.classicAddress,
+          Subject: investor.classicAddress,
+          CredentialType: CREDENTIAL_TYPE_HEX,
+          Expiration: xrplTimeNow() + ONE_YEAR_RIPPLE_SECS,
+          URI: CREDENTIAL_URI_HEX,
+        };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const credPrep   = await client.autofill(credTx as any);
+        const credSigned = broker.sign(credPrep);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const credResult = await (client as any).submitAndWait(credSigned.tx_blob);
+        assertSuccess(credResult, `CredentialCreate (${label})`);
+        console.log(`  ✓ Credential issued to ${label}`);
+        console.log(`    Hash    : ${credResult.result.hash}`);
+        console.log(`    Explorer: https://devnet.xrpl.org/transactions/${credResult.result.hash}\n`);
+      }
 
-    // ── Step 3: Issue credential to InvestorB ────────────────────────────────
-    console.log('--- Step 3: CredentialCreate → InvestorB ---');
-    const credBTx = {
-      TransactionType: 'CredentialCreate',
-      Account: broker.classicAddress,
-      Subject: investorB.classicAddress,
-      CredentialType: CREDENTIAL_TYPE_HEX,
-      Expiration: xrplTimeNow() + ONE_YEAR_RIPPLE_SECS,
-      URI: CREDENTIAL_URI_HEX,
-    };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const credBPrep   = await client.autofill(credBTx as any);
-    const credBSigned = broker.sign(credBPrep);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const credBResult = await (client as any).submitAndWait(credBSigned.tx_blob);
-    assertSuccess(credBResult, 'CredentialCreate (InvestorB)');
-    console.log(`  ✓ Credential issued to InvestorB`);
-    console.log(`    Hash    : ${credBResult.result.hash}`);
-    console.log(`    Explorer: https://devnet.xrpl.org/transactions/${credBResult.result.hash}\n`);
-
-    // ── Step 4: InvestorA accepts credential ─────────────────────────────────
-    console.log('--- Step 4: CredentialAccept — InvestorA ---');
-    const acceptATx = {
-      TransactionType: 'CredentialAccept',
-      Account: investorA.classicAddress,
-      Issuer: broker.classicAddress,
-      CredentialType: CREDENTIAL_TYPE_HEX,
-    };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const acceptAPrep   = await client.autofill(acceptATx as any);
-    const acceptASigned = investorA.sign(acceptAPrep);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const acceptAResult = await (client as any).submitAndWait(acceptASigned.tx_blob);
-    assertSuccess(acceptAResult, 'CredentialAccept (InvestorA)');
-    console.log(`  ✓ InvestorA accepted credential`);
-    console.log(`    Hash    : ${acceptAResult.result.hash}`);
-    console.log(`    Explorer: https://devnet.xrpl.org/transactions/${acceptAResult.result.hash}\n`);
-
-    // ── Step 5: InvestorB accepts credential ─────────────────────────────────
-    console.log('--- Step 5: CredentialAccept — InvestorB ---');
-    const acceptBTx = {
-      TransactionType: 'CredentialAccept',
-      Account: investorB.classicAddress,
-      Issuer: broker.classicAddress,
-      CredentialType: CREDENTIAL_TYPE_HEX,
-    };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const acceptBPrep   = await client.autofill(acceptBTx as any);
-    const acceptBSigned = investorB.sign(acceptBPrep);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const acceptBResult = await (client as any).submitAndWait(acceptBSigned.tx_blob);
-    assertSuccess(acceptBResult, 'CredentialAccept (InvestorB)');
-    console.log(`  ✓ InvestorB accepted credential`);
-    console.log(`    Hash    : ${acceptBResult.result.hash}`);
-    console.log(`    Explorer: https://devnet.xrpl.org/transactions/${acceptBResult.result.hash}\n`);
+      // CredentialAccept
+      console.log(`--- Step ${stepBase + 1}: CredentialAccept — ${label} ---`);
+      const current = existing ?? await fetchCredential(client, investor.classicAddress, broker.classicAddress, CREDENTIAL_TYPE_HEX);
+      if (current?.accepted) {
+        console.log(`  ℹ️  Already accepted — skipping\n`);
+      } else {
+        const acceptTx = {
+          TransactionType: 'CredentialAccept',
+          Account: investor.classicAddress,
+          Issuer: broker.classicAddress,
+          CredentialType: CREDENTIAL_TYPE_HEX,
+        };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const acceptPrep   = await client.autofill(acceptTx as any);
+        const acceptSigned = investor.sign(acceptPrep);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const acceptResult = await (client as any).submitAndWait(acceptSigned.tx_blob);
+        assertSuccess(acceptResult, `CredentialAccept (${label})`);
+        console.log(`  ✓ ${label} accepted credential`);
+        console.log(`    Hash    : ${acceptResult.result.hash}`);
+        console.log(`    Explorer: https://devnet.xrpl.org/transactions/${acceptResult.result.hash}\n`);
+      }
+    }
 
     // ── Step 6: Verify on-chain and fetch credential IDs ────────────────────
     console.log('--- Step 6: On-chain verification ---');
     await sleep(2000); // one ledger settle
 
-    const credIdA = await fetchCredentialId(client, investorA.classicAddress, broker.classicAddress, CREDENTIAL_TYPE_HEX);
-    const credIdB = await fetchCredentialId(client, investorB.classicAddress, broker.classicAddress, CREDENTIAL_TYPE_HEX);
-    const credIdUncred = await fetchCredentialId(client, (loadAccounts()).uncredentialed.classicAddress, broker.classicAddress, CREDENTIAL_TYPE_HEX);
+    const credA      = await fetchCredential(client, investorA.classicAddress, broker.classicAddress, CREDENTIAL_TYPE_HEX);
+    const credB      = await fetchCredential(client, investorB.classicAddress, broker.classicAddress, CREDENTIAL_TYPE_HEX);
+    const credIdA    = credA?.id ?? null;
+    const credIdB    = credB?.id ?? null;
+    const credIdUncred = (await fetchCredential(client, (loadAccounts()).uncredentialed.classicAddress, broker.classicAddress, CREDENTIAL_TYPE_HEX))?.id ?? null;
 
     if (!credIdA) console.warn('  WARN: Credential ID not found for InvestorA — check acceptance tx');
     if (!credIdB) console.warn('  WARN: Credential ID not found for InvestorB — check acceptance tx');

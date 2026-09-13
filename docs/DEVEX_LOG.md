@@ -22,6 +22,7 @@ Severity scale: **Low** (minor inconvenience) · **Medium** (workaround required
 | [DX-08](#dx-08--vaultcreate-requires-tfvaultprivate-flag-when-domainid-is-set-undocumented-coupling) | `VaultCreate` requires `tfVaultPrivate` flag when `DomainID` is set — undocumented coupling | DOC GAP | High |
 | [DX-09](#dx-09--mptokenisuanceset-with-tfmptseterequireauth-returns-tecno_permission-on-vault-share-mpts) | `MPTokenIssuanceSet` with `tfMPTSetRequireAuth` returns `tecNO_PERMISSION` on vault share MPTs | API Confusion | High |
 | [DX-10](#dx-10--vaultdeposit-domain-gate-creates-implicit-mpt-transfer-barrier-via-mptoken-entry-requirement) | `VaultDeposit` domain gate creates implicit MPT transfer barrier via MPToken entry requirement | DOC GAP | Medium |
+| [DX-11](#dx-11--credentialcreate-is-not-idempotent-re-running-c1-setup-fails-with-tecduplicate) | `CredentialCreate` is not idempotent — re-running setup fails with `tecDUPLICATE` | API Confusion | Medium |
 
 ---
 
@@ -441,5 +442,38 @@ const payTx = {
 1. **XLS-65 doc — VaultCreate:** Document that vault-managed share MPTs do not have `lsfMPTRequireAuth` set; secondary transfers to accounts without an `MPToken` entry fail with `tecNO_AUTH`. Explain that the domain gate applies only at deposit time.
 2. **XLS-65 security guidance:** Add a warning that credential-gated vaults (`DomainID` set) may still permit uncredentialed accounts to self-create MPToken entries and receive shares via secondary transfer. If strict share-holder whitelisting is required, use `tfVaultShareNonTransferable` at VaultCreate time, then model transfer eligibility at the application layer.
 3. **XLS-33 error message:** `tecNO_AUTH` when `lsfMPTRequireAuth` is not set should clarify whether the rejection was due to a missing authorization flag or a missing MPToken entry object.
+
+---
+
+## DX-11 — `CredentialCreate` is not idempotent — re-running setup fails with `tecDUPLICATE`
+
+**Category:** API Confusion
+**Severity:** Medium
+**Library:** `xrpl.js@5.2.0-beta.1` · rippled Devnet (XLS-70)
+**Date:** 2026-09-13
+
+### Description
+
+`CredentialCreate` returns `tecDUPLICATE` if a credential with the same `(Issuer, Subject, CredentialType)` tuple already exists on-chain. Credentials persist indefinitely (or until their `Expiration` lapses or they are explicitly deleted). This means a setup script that runs `CredentialCreate` without first checking for an existing credential will fail on every re-run after the first.
+
+For a hackathon or test setup, this is easy to hit: the credential-issuance step succeeds on day one, then fails with `tecDUPLICATE` the next time the developer tries to re-run the setup from scratch (e.g. after a vault lifecycle reset or on a new machine). The error gives no indication that the credential already exists; it just says "duplicate."
+
+The workaround is to query `account_objects { type: 'credential' }` before each `CredentialCreate` and skip the transaction if a matching credential is found. The same applies to `CredentialAccept` — check the `Flags` field for `lsfAccepted` (`0x00010000`) before re-submitting. The `PermissionedDomainSet` has a similar issue: re-running creates a second domain object on-chain; the workaround is to verify the existing `DOMAIN_ID` from `.env` is still live via `ledger_entry` before creating a new one.
+
+### Reproduction
+
+```typescript
+// Run once — succeeds
+CredentialCreate { Issuer: broker, Subject: investorA, CredentialType: '4B59435F5645524946494544' }
+
+// Re-run without checking → tecDUPLICATE
+CredentialCreate { Issuer: broker, Subject: investorA, CredentialType: '4B59435F5645524946494544' }
+```
+
+### Proposed fix
+
+1. **XLS-70 tutorial / CredentialCreate docs:** Add a note that `CredentialCreate` is NOT idempotent; provide the idempotency check pattern (query `account_objects { type: 'credential' }` before submitting).
+2. **Error message improvement:** `tecDUPLICATE` in the `CredentialCreate` context should say "A credential with this (Issuer, Subject, CredentialType) already exists" to make the cause immediately clear.
+3. **SDK helper:** Consider an `upsertCredential` pattern in xrpl.js that handles the check-and-skip logic, similar to how `autofill` handles sequence numbers automatically.
 
 ---
