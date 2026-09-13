@@ -33,11 +33,12 @@ async function main(): Promise<void> {
 
   const vaultId  = requireEnv('VAULT_ID');
   const subDate  = Number(requireEnv('VAULT_SUB_DATE'));
-  const { investorA, investorB } = loadAccounts();
+  const { investorA, investorB, uncredentialed } = loadAccounts();
 
   console.log(`VaultID  : ${vaultId}`);
   console.log(`InvestorA: ${investorA.classicAddress}`);
   console.log(`InvestorB: ${investorB.classicAddress}`);
+  console.log(`Uncred   : ${uncredentialed.classicAddress}`);
   console.log(`Sub ends : ${rippleTimeToISO(subDate)}\n`);
 
   // Warn if subscription window may have closed
@@ -47,6 +48,41 @@ async function main(): Promise<void> {
   }
 
   await withClient(async (client) => {
+
+    // ── C3: Uncredentialed VaultDeposit probe ─────────────────────────────
+    // Only meaningful when vault has DomainID (credential gate from c1/b1).
+    // Captures the rejection code verbatim so we have on-chain proof.
+    if (process.env.DOMAIN_ID) {
+      console.log('--- C3: Uncredentialed VaultDeposit probe (expect rejection) ---');
+      const uncredDepTx = {
+        TransactionType: 'VaultDeposit',
+        Account: uncredentialed.classicAddress,
+        VaultID: vaultId,
+        Amount: '1000000', // 1 XRP probe
+      };
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const uncredPrep   = await client.autofill(uncredDepTx as any);
+        const uncredSigned = uncredentialed.sign(uncredPrep);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const uncredResult = await (client as any).submitAndWait(uncredSigned.tx_blob);
+        const uncredMeta   = uncredResult.result.meta as Record<string, unknown> | undefined;
+        const uncredCode   = (uncredMeta?.TransactionResult as string) ?? 'unknown';
+        if (uncredCode === 'tesSUCCESS') {
+          console.log(`  ⚠️  Uncred deposit ACCEPTED (tesSUCCESS) — domain gate may not be enforced`);
+          console.log(`      Hash: ${uncredResult.result.hash}`);
+        } else {
+          console.log(`  ✓ Uncred deposit REJECTED (expected): ${uncredCode}`);
+          console.log(`    Hash    : ${uncredResult.result.hash}`);
+          console.log(`    Explorer: https://devnet.xrpl.org/transactions/${uncredResult.result.hash}`);
+          console.log(`    Full meta: ${JSON.stringify(uncredMeta, null, 2)}`);
+        }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        console.log(`  Uncred deposit threw: ${msg}`);
+      }
+      console.log();
+    }
 
     // ── InvestorA deposit ─────────────────────────────────────────────────
     console.log(`Depositing ${Number(DEPOSIT_A_DROPS) / 1e6} XRP from InvestorA...`);

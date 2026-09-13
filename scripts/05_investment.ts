@@ -32,8 +32,10 @@ function requireEnv(key: string): string {
 const PRINCIPAL_DROPS  = '10000000'; // 10 XRP
 const INTEREST_RATE    = 5000;       // 5000 tenth-bps = 0.5% annual (50 bps)
 const PAYMENT_TOTAL    = 1;
-const PAYMENT_INTERVAL = 300;        // seconds — 5 min; GracePeriod cannot exceed this
-const GRACE_PERIOD     = 300;        // seconds — equal to interval (max allowed); 10 min total window for B4
+const PAYMENT_INTERVAL = 300;        // seconds — 5 min until payment is due
+const GRACE_PERIOD     = 300;        // seconds — payment window opens GracePeriod secs BEFORE NextPaymentDue
+                                     // window: [NextPaymentDue - GracePeriod, NextPaymentDue)
+                                     // GracePeriod cannot exceed PaymentInterval
 
 async function main(): Promise<void> {
   console.log('=== B3: Investment — LoanBrokerSet + LoanSet + Drawdown ===\n');

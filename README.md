@@ -21,6 +21,8 @@ The fund lifecycle maps onto the three phases of a closed-ended vault:
 | **Investment** | Deposits and withdrawals are blocked. The broker originates a loan and the borrower draws down. *(Loaded: mid-term coupon via `tfVaultDonation`; share transfers within the KYC ring.)* |
 | **Redemption** | Borrower repays; investors withdraw principal (plus yield when coupons / interest are demonstrated); MPT shares are burned. |
 
+How the KYC credential gate works (trust chain, dual-signature model, MPT auth): [`docs/CREDENTIAL_GATE.md`](docs/CREDENTIAL_GATE.md)
+
 ### Implementation status
 
 **Done (Track 2 minimum bar — Phase B)**
@@ -33,13 +35,19 @@ The fund lifecycle maps onto the three phases of a closed-ended vault:
 - [x] Investor A/B `VaultWithdraw` / share burn (`b5`)
 - [x] Phase A smoke path (`smoke:a2`–`a4`) and DevEx hook invite
 
-**Not yet (Loaded + polish — Phase C/D)**
+**Done (Loaded — Phase C)**
 
-- [ ] Permissioned Domain + KYC Credentials issued to investors
-- [ ] Credential-gated deposits (uncredentialed `VaultDeposit` rejected)
-- [ ] MPT `lsfMPTRequireAuth` authorization ring
-- [ ] Pre-maturity MPT share transfer A→B; transfer to uncredentialed rejected
-- [ ] Coupon injection (`VaultDeposit` + `tfVaultDonation`) with before/after PPS
+- [x] Permissioned Domain created + KYC credentials issued/accepted for Investor A/B (`c1`)
+- [x] Credential-gated `VaultCreate` (`DomainID` + `tfVaultPrivate`) — domain gate live (`b1`)
+- [x] Uncredentialed `VaultDeposit` probe in b2 — `tecNO_AUTH` captured verbatim on-chain (`c3`)
+- [x] Pre-maturity MPT share transfer A→B (`tesSUCCESS`); A→Uncredentialed (`tecNO_AUTH`) (`c4`)
+- [x] MPT auth probe (`c2`) — surfaces `tecNO_PERMISSION` on vault-managed MPTs (DX-09 logged)
+- [x] DevEx findings DX-07 through DX-12 logged in `docs/DEVEX_LOG.md` (12 total)
+- [x] Full Phase C `c1 → b0 → b1 → b2 → b3 → b4 → c2 → c4 → b5` lifecycle verified on Devnet
+
+**Not yet (Phase D / polish)**
+
+- [ ] Coupon injection (`VaultDeposit` + `tfVaultDonation`) with before/after PPS (`b2.5`)
 - [ ] Wrong-phase rejection demos (`10_rejection_demos.ts`)
 - [ ] README on-chain tx table filled with explorer links
 
@@ -74,8 +82,8 @@ Run and verify the done path: [`TESTING.md`](TESTING.md).
 | Loan repayment | Investment | `scripts/08_repayment.ts` | Done |
 | `VaultWithdraw` | Redemption | `scripts/09_redemption.ts` | Done |
 | `VaultDeposit` — `tfVaultDonation` coupon | Investment | `scripts/06_coupon_injection.ts` | Not yet |
-| Permissioned Domain / Credentials | Setup | `scripts/03_permissioned_domain.ts` | Not yet |
-| MPT share transfer (+ rejection) | Investment | `scripts/07_mpt_transfer.ts` | Not yet |
+| Permissioned Domain / Credentials | Setup | `scripts/03_permissioned_domain.ts` | Done |
+| MPT share transfer (+ rejection) | Investment | `scripts/07_mpt_transfer.ts` | Done |
 | Phase-gate rejections | All phases | `scripts/10_rejection_demos.ts` | Not yet |
 
 ---
@@ -86,16 +94,17 @@ Run and verify the done path: [`TESTING.md`](TESTING.md).
 
 | Step | Transaction hash | Explorer |
 |---|---|---|
-| VaultCreate | — | — |
-| Subscription — Investor A | — | — |
-| Subscription — Investor B | — | — |
-| LoanSet | — | — |
-| Drawdown | — | — |
-| Coupon injection | — | — |
-| MPT transfer A → B | — | — |
-| Repayment | — | — |
-| Redemption — Investor A | — | — |
-| Redemption — Investor B | — | — |
+| VaultCreate (gated, DomainID + tfVaultPrivate) | `1899CC04` | [explorer](https://devnet.xrpl.org/transactions/1899CC0430528EF94E0C745DDDB6C20E9A4EA91D5BD0B5FBB2466C946E8F7B87) |
+| PermissionedDomainSet | `CE2BC853` (object) | [object](https://devnet.xrpl.org/objects/CE2BC85376404029F8857B51F8D9828F0C6FB15CD4676C5ED960E7AEAAAA9CEB) |
+| Uncred VaultDeposit — rejected `tecNO_AUTH` (C3) | `DFDCCA5D` | [explorer](https://devnet.xrpl.org/transactions/DFDCCA5DD81A13449D60B9B23F94D512679A64A0BD35EBBB90F8DB82FE6CB6F2) |
+| Subscription — Investor A | `B2AF328C` | [explorer](https://devnet.xrpl.org/transactions/B2AF328C5307EA99C222E63EA292899503713A770D64E28516E510C61E946794) |
+| Subscription — Investor B | `D8E73B08` | [explorer](https://devnet.xrpl.org/transactions/D8E73B0884CCDAD0A5292CBDDAD5BB6DCE40138DEBAD9751B173CD1902AFC762) |
+| LoanSet (dual-sign) + drawdown | `A7E879A0` | [explorer](https://devnet.xrpl.org/transactions/A7E879A04EE4450396320CEAEDB80A965190C3A69DA04CCCD138676D0066A39D) |
+| LoanPay (repayment) | `04BFE0BB` | [explorer](https://devnet.xrpl.org/transactions/04BFE0BBA65B8F21A26CF4DAEC513007B63F6B37339BC5C2EEBC2790590DE618) |
+| MPT transfer A → B (`tesSUCCESS`) | `69BEF2F8` | [explorer](https://devnet.xrpl.org/transactions/69BEF2F8BC61E738D228639AB11CC535C56D6F37E7A4D0CE6DCE6E7CCAC41C98) |
+| MPT transfer A → Uncredentialed (`tecNO_AUTH`) | `B6C4442D` | [explorer](https://devnet.xrpl.org/transactions/B6C4442D8E19DE4D5919DF1C1C2620A340BB72154FA866DC08180A48E0ABE3CB) |
+| Redemption — Investor A | `0122EDDE` | [explorer](https://devnet.xrpl.org/transactions/0122EDDE15ED00E5717128A80B50896B8B7F23413BA2E119827488DC5065F175) |
+| Redemption — Investor B | `BA84662D` | [explorer](https://devnet.xrpl.org/transactions/BA84662D4B2C9ED8E9EB9688893547211308A86BABA807D4594FB868BA6CEB74) |
 
 ---
 
