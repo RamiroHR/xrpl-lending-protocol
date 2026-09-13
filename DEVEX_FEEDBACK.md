@@ -5,7 +5,8 @@
 **Environment:** XRPL public Devnet  
 **Library:** `xrpl.js@5.2.0-beta.1` (we also hit several issues on `beta.0` before the organizer upgrade)  
 
-**Team:** DeVinci Blockchain · XRPL Lending Protocol Hackathon · 13 Sep 2026  
+**Team:** quant-lending — Ramiro Rodriguez, Boris Danailov  
+**Event:** XRPL Lending Protocol Hackathon · DeVinci Blockchain / Ripple · 13 Sep 2026  
 
 We ran the mandated DevEx hook locally (invite `BFT-PARIS-26`).  
 

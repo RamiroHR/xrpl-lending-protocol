@@ -149,10 +149,13 @@ After setup (and after each lifecycle run), confirm results on [devnet.xrpl.org]
 
 ```
 root/
-├── docs/           — strategy, product definition, DevEx log, sprint notes
-├── scripts/        — TypeScript flow scripts (one per lifecycle step)
-├── TESTING.md      — how to verify the build on Devnet
-├── .env.example    — account seed/address template (copy to .env — never commit .env)
+├── DEVEX_FEEDBACK.md  — manual DevEx report (repo root, for submission)
+├── docs/DEVEX_LOG.md  — structured issue catalog (DX-01…)
+├── docs/              — product docs, pitch script, longer drafts
+├── scripts/           — TypeScript flow scripts (one per lifecycle step)
+├── pitch.html         — HTML pitch deck
+├── TESTING.md         — how to verify the build on Devnet
+├── .env.example       — account seed/address template (copy to .env — never commit .env)
 └── README.md
 ```
 
@@ -160,9 +163,16 @@ root/
 
 ## Developer feedback
 
-Friction points are logged continuously in [`docs/DEVEX_LOG.md`](docs/DEVEX_LOG.md) throughout the sprint.
+The hackathon asks for two complementary DevEx deliverables. In this repo they are split like this:
 
-The formal submission feedback report is at [`DEVEX_FEEDBACK.md`](DEVEX_FEEDBACK.md) (repo root) — narrative answers to the Track 2 DevEx prompts. Structured findings: [`docs/DEVEX_LOG.md`](docs/DEVEX_LOG.md).
+| Deliverable | File | What it is |
+|---|---|---|
+| **Manual feedback report** (repo root) | [`DEVEX_FEEDBACK.md`](DEVEX_FEEDBACK.md) | Short narrative: track / flavour / environment / library at the top; answers the Track 2 “Feedback to capture” questions from our live Devnet runs; each answer includes a proposed fix |
+| **Structured issue log** | [`docs/DEVEX_LOG.md`](docs/DEVEX_LOG.md) | One entry per finding in the format required by the brief: **category**, **title**, **description**, **repro steps or tx/code link**, **severity**, **library + version**, **proposed fix**. Indexed as DX-01 … DX-14 |
+
+We also ran the automated **XRPL DevEx hook** locally (invite `BFT-PARIS-26`).
+
+Optional longer draft (not the submission copy): [`docs/DEVEX_REPORT.md`](docs/DEVEX_REPORT.md).
 
 ---
 
@@ -176,4 +186,5 @@ HTML pitch (≤10 sections, keyboard ← →): open [`pitch.html`](pitch.html) i
 
 ## Team
 
-DeVinci Blockchain · XRPL Lending Protocol Hackathon 2026
+**quant-lending** — Ramiro Rodriguez, Boris Danailov  
+XRPL Lending Protocol Hackathon 2026 · DeVinci Blockchain / Ripple · IIM Paris–La Défense

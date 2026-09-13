@@ -122,6 +122,7 @@ h1 em { font-style: normal; color: var(--accent); }
   content: ""; position: absolute; left: 0; top: 0.55em;
   width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
 }
+.roles li::before { display: none; content: none; }
 
 .phase-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
 .phase-tab {
@@ -163,6 +164,22 @@ h1 em { font-style: normal; color: var(--accent); }
 .tx-list .name { font-size: 13px; font-weight: 600; }
 .tx-list .hash { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
 
+.roles { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.roles li {
+  display: grid; grid-template-columns: 7.5rem 1fr; gap: 8px; align-items: baseline;
+  font-size: 12px; padding: 6px 0; padding-left: 0; border-bottom: 1px solid var(--line);
+  position: relative;
+}
+.roles li:last-child { border-bottom: none; }
+.roles .role { font-weight: 700; color: var(--ink); }
+.roles .addr {
+  font-family: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px; color: var(--muted); word-break: break-all; line-height: 1.35;
+}
+.roles a.addr { color: var(--accent-2); text-decoration: none; }
+.roles a.addr:hover { text-decoration: underline; }
+.hint { font-size: 11px; color: var(--muted); margin-top: 10px; line-height: 1.45; }
+
 .dx {
   display: flex; flex-direction: column; gap: 10px; height: 100%;
 }
@@ -177,13 +194,22 @@ h1 em { font-style: normal; color: var(--accent); }
 
 .footer-bar {
   position: fixed; bottom: 0; left: 0; right: 0;
-  display: flex; justify-content: space-between; align-items: center;
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
   padding: 10px 28px;
   background: rgba(244, 247, 250, 0.92);
   border-top: 1px solid var(--line);
   font-size: 12px; color: var(--muted);
   backdrop-filter: blur(8px);
 }
+.footer-team {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink);
+  min-width: 0;
+}
+.footer-team strong { font-weight: 700; }
+.footer-nav-meta { flex-shrink: 0; }
 .footer-bar kbd {
   font: inherit; font-size: 11px; font-weight: 600;
   border: 1px solid var(--line); border-bottom-width: 2px;
@@ -379,7 +405,7 @@ h1 em { font-style: normal; color: var(--accent); }
   <section class="slide" data-title="On-chain" id="s-onchain">
     <div class="eyebrow">Technical execution</div>
     <h2 class="h2">Verified on public Devnet</h2>
-    <p class="lead">Representative hashes from the Phase C lifecycle run. Full table in README.</p>
+    <p class="lead">Tx links from the verified run. Keep the role map open when reading explorer balance changes.</p>
     <div class="grid-2">
       <div class="tx-list">
         <a href="https://devnet.xrpl.org/transactions/1899CC0430528EF94E0C745DDDB6C20E9A4EA91D5BD0B5FBB2466C946E8F7B87" target="_blank" rel="noopener">
@@ -402,14 +428,34 @@ h1 em { font-style: normal; color: var(--accent); }
         </a>
       </div>
       <div class="panel">
-        <h3>Stack</h3>
-        <ul>
-          <li>Public XRPL Devnet</li>
-          <li>TypeScript scripts via <code>xrpl.js@5.2.0-beta.1</code></li>
-          <li>No API / no frontend product — ledger is the backend</li>
-          <li>PPS rise on-chain: LoanPay moves AssetsTotal 80 → 80.000005 XRP</li>
-          <li>Playbook: <code>TESTING.md</code> · findings: <code>docs/DEVEX_REPORT.md</code></li>
+        <h3>Players (this Devnet run)</h3>
+        <ul class="roles">
+          <li>
+            <span class="role">Broker</span>
+            <a class="addr" href="https://devnet.xrpl.org/accounts/rETJRQgLu5Fw7onujGPvHrPsQ7kVWJ282i" target="_blank" rel="noopener">rETJRQgLu5Fw7onujGPvHrPsQ7kVWJ282i</a>
+          </li>
+          <li>
+            <span class="role">Investor A</span>
+            <a class="addr" href="https://devnet.xrpl.org/accounts/r9xWSZ1RZUzM65F4WsL3zRZL5LMVhskrzG" target="_blank" rel="noopener">r9xWSZ1RZUzM65F4WsL3zRZL5LMVhskrzG</a>
+          </li>
+          <li>
+            <span class="role">Investor B</span>
+            <a class="addr" href="https://devnet.xrpl.org/accounts/rLHvsr9uosbw2b4RHdYU6fgWLJf2BKiv1T" target="_blank" rel="noopener">rLHvsr9uosbw2b4RHdYU6fgWLJf2BKiv1T</a>
+          </li>
+          <li>
+            <span class="role">Borrower</span>
+            <a class="addr" href="https://devnet.xrpl.org/accounts/rHMCXx15jGM99x14Kmgmy4Z23u42usgz1E" target="_blank" rel="noopener">rHMCXx15jGM99x14Kmgmy4Z23u42usgz1E</a>
+          </li>
+          <li>
+            <span class="role">Uncredentialed</span>
+            <a class="addr" href="https://devnet.xrpl.org/accounts/rQG5yfgE77LoEThN3ZEFKMqgrDKHT4Z5x2" target="_blank" rel="noopener">rQG5yfgE77LoEThN3ZEFKMqgrDKHT4Z5x2</a>
+          </li>
+          <li>
+            <span class="role">Vault pool</span>
+            <a class="addr" href="https://devnet.xrpl.org/accounts/rHABBu7CLFihkwnyQUJHQUTT5RTXad2zma" target="_blank" rel="noopener">rHABBu7CLFihkwnyQUJHQUTT5RTXad2zma</a>
+          </li>
         </ul>
+        <p class="hint"><strong>LoanPay:</strong> Borrower pays → balance falls on <em>Borrower</em>; XRP lands on <em>Vault pool</em> (pseudo-account), not the Broker wallet. Vault ID <code>BF8C897F…</code>.</p>
       </div>
     </div>
   </section>
@@ -483,15 +529,16 @@ h1 em { font-style: normal; color: var(--accent); }
     </div>
     <div class="panel" style="margin-top: 14px;">
       <h3>Repo</h3>
-      <p style="margin-top: 6px;">Public GitHub · README with explorer links · <code>TESTING.md</code> · <code>docs/DEVEX_REPORT.md</code> · script runner only</p>
-      <p style="margin-top: 12px; font-size: 13px; color: var(--muted);">DeVinci Blockchain · XRPL Lending Protocol Hackathon 2026 · IIM Paris–La Défense</p>
+      <p style="margin-top: 6px;">Public GitHub · README with explorer links · <code>TESTING.md</code> · <code>DEVEX_FEEDBACK.md</code> · script runner only</p>
+      <p style="margin-top: 12px; font-size: 13px; color: var(--muted);">XRPL Lending Protocol Hackathon 2026 · DeVinci Blockchain / Ripple · IIM Paris–La Défense</p>
     </div>
   </section>
 
 </main>
 
 <div class="footer-bar">
-  <div>Slide <span id="pos">1</span> / <span id="total">8</span> · <kbd>←</kbd> <kbd>→</kbd> to navigate</div>
+  <div class="footer-nav-meta">Slide <span id="pos">1</span> / <span id="total">8</span> · <kbd>←</kbd> <kbd>→</kbd></div>
+  <div class="footer-team"><strong>quant-lending</strong> — Ramiro Rodriguez · Boris Danailov</div>
   <div class="nav-arrows">
     <button type="button" id="prev">Previous</button>
     <button type="button" id="next">Next</button>
