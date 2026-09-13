@@ -417,13 +417,13 @@ h1 em { font-style: normal; color: var(--accent); }
   <!-- 7 -->
   <section class="slide" data-title="DevEx" id="s-devex">
     <div class="eyebrow">Developer feedback</div>
-    <h2 class=”h2”>Key friction points — with proposed fixes</h2>
-    <p class=”lead”>Drawn from the live build log. Full write-up in <code>docs/DEVEX_REPORT.md</code>.</p>
+    <h2 class=”h2”>14 findings — six High-severity highlights</h2>
+    <p class=”lead”>Drawn from the live build log. Full write-up: <code>docs/DEVEX_REPORT.md</code>.</p>
     <div class=”grid-3”>
       <div class=”panel dx”>
         <span class=”sev”>High · SDK bug</span>
         <h3>DX-06 · Wrong LoanSet counterparty prefix</h3>
-        <p class=”fix”><code>signLoanSetByCounterparty</code> still uses STX signing after <code>fixCleanup3_4_0</code>. Needs CPT (<code>encodeForSigningCounterparty</code>). Blocks every dual-party loan on Devnet.</p>
+        <p class=”fix”><code>signLoanSetByCounterparty</code> still uses STX prefix after <code>fixCleanup3_4_0</code>. Every dual-party loan fails until you call <code>encodeForSigningCounterparty</code>.</p>
         <p class=”fix”><strong>Fix:</strong> one-line SDK swap + tutorial note until patched.</p>
       </div>
       <div class=”panel dx”>
@@ -435,8 +435,26 @@ h1 em { font-style: normal; color: var(--accent); }
       <div class=”panel dx”>
         <span class=”sev”>High · Doc gap + SDK</span>
         <h3>DX-13 · tfVaultDonation absent from SDK, codec &amp; devnet</h3>
-        <p class=”fix”>Coupon injection (deposit without minting shares → PPS rise) is a V1.1 Loaded feature. Official docs say <em>”VaultDeposit has no flags.”</em> Probing <code>0x00010000</code> → <code>temINVALID_FLAG</code> on 3.4.0-rc5.</p>
+        <p class=”fix”>Coupon injection (deposit without minting shares → PPS rise) is a V1.1 feature. Official docs: <em>”VaultDeposit has no flags.”</em> Probe <code>0x00010000</code> → <code>temINVALID_FLAG</code>.</p>
         <p class=”fix”><strong>Fix:</strong> export <code>tfVaultDonation</code> in xrpl.js; add to binary-codec; document in VaultDeposit reference.</p>
+      </div>
+      <div class=”panel dx”>
+        <span class=”sev”>High · Doc gap</span>
+        <h3>DX-05 · VaultKind / SubscriptionDate / RedemptionDate undocumented</h3>
+        <p class=”fix”>Three required V1.1 fields completely absent from the published <code>VaultCreate</code> reference page. Without them, a closed-ended vault cannot be built from docs alone.</p>
+        <p class=”fix”><strong>Fix:</strong> update VaultCreate docs; add V1.1 closed-ended vault tutorial.</p>
+      </div>
+      <div class=”panel dx”>
+        <span class=”sev”>High · Doc gap</span>
+        <h3>DX-08 · DomainID silently requires tfVaultPrivate</h3>
+        <p class=”fix”>Setting <code>DomainID</code> on <code>VaultCreate</code> without <code>tfVaultPrivate</code> fails — undocumented coupling. Blocks every Loaded setup attempt.</p>
+        <p class=”fix”><strong>Fix:</strong> document the required flag pair; SDK warning when DomainID is set without the flag.</p>
+      </div>
+      <div class=”panel dx”>
+        <span class=”sev”>High · API confusion</span>
+        <h3>DX-09 · MPTokenIssuanceSet returns tecNO_PERMISSION on vault MPTs</h3>
+        <p class=”fix”>Vault-managed share MPTs cannot have <code>lsfMPTRequireAuth</code> set via <code>MPTokenIssuanceSet</code> — the vault pseudo-account owns the issuance. Returns <code>tecNO_PERMISSION</code> with no explanation.</p>
+        <p class=”fix”><strong>Fix:</strong> document vault MPT ownership model; clarify which issuance flags are applicable.</p>
       </div>
     </div>
   </section>
